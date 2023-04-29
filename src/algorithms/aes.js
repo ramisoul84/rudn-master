@@ -189,7 +189,8 @@ const aesEncrypt = (plainText, key) => {
     });
   });
   const ciphrtHex = cipherTextHexBlocks.flat();
-  aesDecrypt(ciphrtHex, key);
+  const state0hexRes = states0Hex.slice();
+  state0hexRes.reverse();
   return {
     numberOfBlocks,
     appendedPlaintextHex,
@@ -199,6 +200,7 @@ const aesEncrypt = (plainText, key) => {
     roundKeys,
     states0,
     states0Hex,
+    state0hexRes,
     cipherTextBinBlocks,
     ciphrtHex,
   };
@@ -251,13 +253,13 @@ const aesEncryptBlock = (plaintextBlockBin, key) => {
         : null;
     });
   });
-  console.log(states[0]);
   const cipher = stateToVector(states[Nr][5]);
 
   return { states, statesHex, cipher };
 };
 //////////////////////////////////////
 //  cipherText in hexa
+/*
 const aesDecrypt = (cipherText, key) => {
   const numberOfBlocks = cipherText.length / 16;
   for (let i = 0; i < numberOfBlocks; i++) {
@@ -272,11 +274,9 @@ const aesDecrypt = (cipherText, key) => {
 };
 
 const aesDecryptBlock = (ciphertextBlockHex, key) => {
-  console.log(ciphertextBlockHex);
   const ciphertextBlockBin = ciphertextBlockHex.map((e) => {
     return parseInt(e, 16).toString(2).padStart(8, "0");
   });
-  console.log(ciphertextBlockBin);
   const Nr = key.length / 4 + 6; // Number of Rounds
   const roundKeysBin = keyExpansion(key).roundKeysBin;
   const statesDec = [];
@@ -331,9 +331,9 @@ const aesDecryptBlock = (ciphertextBlockHex, key) => {
     });
   });
   const plainText = stateToVector(statesDec[Nr][5]);
-  console.log(statesDecHex[0]);
   return { statesDecHex, plainText };
 };
+*/
 //////////////////////////
 //// Convert a 128-bits binary vector to Matrix 4*4 (binary)
 const vectorToState = (vec) => {
@@ -675,7 +675,6 @@ const keyExpansion = (key) => {
 
 export {
   aesEncrypt,
-  aesDecrypt,
   mixColumns,
   dot,
   mixMatHex,
@@ -686,16 +685,5 @@ export {
 };
 const plaintext = "Welcome to Rudn!";
 const key = "moscow2023#rudn*";
-//padPKCS7(plaintext);
-//keyExpansion(key);
+
 aesEncrypt(plaintext, key);
-//aesDecryptBlock(aesEncrypt(plaintext, key).cipherTextBinBlocks[0], key);
-//vectorToState([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
-/*
-PKCS#7 (Public Key Cryptography Standards #7) is a padding scheme used in many cryptographic protocols,
- including AES. It is a deterministic padding scheme that appends bytes to the end of the plaintext message
-  to ensure that its length is a multiple of the block size. The value of each appended byte is equal
-   to the number of bytes added.
-
-
-*/

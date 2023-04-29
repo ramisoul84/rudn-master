@@ -6,7 +6,6 @@ import {
   rCon,
   mixMatHex,
   invMixMatHex,
-  aesDecrypt,
   dot as galoisMultiply,
 } from "../algorithms/aes";
 import keyExpImg from "../images/keyExpansion.svg";
@@ -31,6 +30,7 @@ const AES = () => {
   // number of words in original key
   const [n, setN] = useState(4);
   //
+
   const {
     numberOfBlocks,
     appendedPlaintextHex,
@@ -39,11 +39,11 @@ const AES = () => {
     keyWordsTable,
     roundKeys,
     states0Hex,
+    state0hexRes,
     states0,
     cipherTextBinBlocks,
     ciphrtHex,
   } = aesEncrypt(data.plainText, data.key);
-  const { statesDec0Hex } = aesDecrypt(ciphrtHex, data.key);
   const [result, setResult] = useState({
     numberOfBlocks: numberOfBlocks,
     appendedPlaintextHex: appendedPlaintextHex,
@@ -52,10 +52,10 @@ const AES = () => {
     keyWordsTable: keyWordsTable,
     roundKeys: roundKeys,
     states0Hex: states0Hex,
+    state0hexRes: state0hexRes,
     states0: states0,
     cipherTextBinBlocks: cipherTextBinBlocks,
     ciphrtHex: ciphrtHex,
-    statesDec0Hex: statesDec0Hex,
   });
   ///////////////////
 
@@ -121,6 +121,7 @@ const AES = () => {
       keyWordsTable,
       roundKeys,
       states0Hex,
+      state0hexRes,
       states0,
       cipherTextBinBlocks,
     } = aesEncrypt(data.plainText, data.key);
@@ -134,6 +135,7 @@ const AES = () => {
         keyWordsTable: keyWordsTable,
         roundKeys: roundKeys,
         states0Hex: states0Hex,
+        state0hexRes: state0hexRes,
         states0: states0,
         cipherTextBinBlocks: cipherTextBinBlocks,
       };
@@ -218,7 +220,7 @@ const AES = () => {
           placeholder={"Enter a text"}
           onChange={handleChange}
         />
-        <input type="submit" />
+        <input type="submit" value="ENCRYPT" />
       </form>
       <div id="result">
         <div className="container flex">
@@ -2717,6 +2719,7 @@ const AES = () => {
                 </div>
               </div>
             </ul>
+
             <p>
               These four operations are applied in sequence on the state matrix
               in each intermediate round, except for the final round
@@ -2735,9 +2738,9 @@ const AES = () => {
                 <th>InvShiftRows</th>
                 <th>InvSubBytes</th>
                 <tbody>
-                  {result.states0Hex
+                  {state0hexRes
                     .slice(1, n + 6)
-                    .reverse()
+
                     .map((e, i) => {
                       return (
                         <tr>
