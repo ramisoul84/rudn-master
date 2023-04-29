@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import {
   aesEncrypt,
   sBox,
-  mixColumns,
   invSBox,
   rCon,
   mixMatHex,
+  invMixMatHex,
   aesDecrypt,
   dot as galoisMultiply,
 } from "../algorithms/aes";
@@ -160,6 +160,8 @@ const AES = () => {
     i: 0,
     j: 0,
   });
+  const [indexDecSub, setIndexDecSub] = useState([0, 0]);
+  const [valueSubStateDec, setValueSubStateDec] = useState([null, null]);
   return (
     <section id="aes">
       <h1>Advanced Encryption Standard - AES</h1>
@@ -1049,7 +1051,13 @@ const AES = () => {
                                       : {}
                                   }
                                 >
-                                  {e1}
+                                  <strong>
+                                    {" "}
+                                    {e1
+                                      .toString(16)
+                                      .padStart(2, "0")
+                                      .toUpperCase()}
+                                  </strong>
                                 </td>
                               );
                             })}
@@ -1060,7 +1068,7 @@ const AES = () => {
                   </table>
                   <p style={{ margin: "auto 0" }}>*</p>
                   <table>
-                    <caption>Previous Matrix</caption>
+                    <caption>Previous State</caption>
                     {result.states0Hex[1][2].map((e, i) => {
                       return (
                         <tr>
@@ -1561,11 +1569,12 @@ const AES = () => {
                   degree 8 or highe,we need to reduce the result modulo an
                   irreducible polynomial of degree 8,we can replace any term
                   with degree 8 or higher with an equivalent term that has
-                  degree less than 8, using the relation x^8 = x^4 + x^3 + x^2 +
-                  1. We can then simplify the result by removing any terms that
-                  are equivalent modulo this polynomial.
+                  degree less than 8, using the relation x<sup>8</sup> = x
+                  <sup>4</sup> + x<sup>3</sup> + x + 1. then we simplify the
+                  result by removing any terms that are equivalent modulo this
+                  polynomial.
                 </p>
-                <p>Now we XOR The results</p>
+                <p style={{ textAlign: "left" }}>Now we XOR The results</p>
                 <table>
                   {galoisMultiply(
                     mixMatHex[indexMix.i][0].toString(2).padStart(8, "0"),
@@ -1856,178 +1865,997 @@ const AES = () => {
             Round 0
           </h4>
           <article id="aes-decryption-zero">
+            <ul className="list">
+              <li>
+                <strong>Add Round Key</strong>
+              </li>
+              <p>We add the last Round key to Cipher State</p>
+              <div className="container flex center">
+                <div className="grid5">
+                  <State
+                    data={result.states0Hex[n + 6][5]}
+                    caption="CipherText"
+                    index={[0, 0]}
+                  />
+                  <p style={{ margin: "auto 0" }}>&oplus;</p>
+                  <State
+                    data={result.states0Hex[n + 6][4]}
+                    caption={`RoundKey${n + 6}`}
+                    index={[0, 0]}
+                  />
+                  <p style={{ margin: "auto 0" }}>&rArr;</p>
+                  <State
+                    data={result.states0Hex[n + 6][2]}
+                    caption="New State"
+                    index={[0, 0]}
+                  />
+                </div>
+              </div>
+              <li>
+                <strong>Inverse Shift Rows:</strong>
+                <p>
+                  In this operation, the second row of the state is shifted one
+                  byte to the right, the third row is shifted two bytes to the
+                  right, and the fourth row is shifted three bytes to the right.
+                </p>
+              </li>
+              <div className="container  flex center">
+                <div className="grid3">
+                  <table>
+                    <caption>Previous State</caption>
+                    {result.states0Hex[n + 6][2].map((e, i) => {
+                      return (
+                        <tr>
+                          {e.map((e1, j) => {
+                            return (
+                              <td
+                                style={
+                                  i > 0 && j === 0
+                                    ? { backgroundColor: "lightgreen" }
+                                    : {}
+                                }
+                              >
+                                <span>{e1}</span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </table>
+                  <p style={{ margin: "auto 0" }}>&rArr;</p>
+                  <table>
+                    <caption>InvShiftRows</caption>
+                    {result.states0Hex[n + 6][1].map((e, i) => {
+                      return (
+                        <tr>
+                          {e.map((e1, j) => {
+                            return (
+                              <td
+                                style={
+                                  (i === 1 && j === 1) ||
+                                  (i === 2 && j === 2) ||
+                                  (i === 3 && j === 3)
+                                    ? { backgroundColor: "lightgreen" }
+                                    : {}
+                                }
+                              >
+                                <span>{e1}</span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </table>
+                </div>
+              </div>
+              <li>
+                <strong>Inverse Byte substitution</strong>
+              </li>
+              <p>
+                This operation substitutes each byte of the state with a
+                corresponding byte from a fixed lookup table called the
+                Inv-S-box.
+              </p>
+              <div className="container  flex center">
+                <p style={{ textAlign: "left" }}>
+                  &bull; Click any byte in State0 Matrix to see how the Byte
+                  substitution works
+                </p>
+                <div className="grid3">
+                  <State
+                    data={result.states0Hex[n + 6][1]}
+                    caption="Previous State"
+                    index={indexDecSub}
+                    func1={setIndexDecSub}
+                    func2={setValueSubStateDec}
+                  />
+                  <p style={{ margin: "auto 0" }}>&rArr;</p>
+                  <State
+                    data={result.states0Hex[n + 6][0]}
+                    caption="InvSubBytes"
+                    index={indexDecSub}
+                  />
+                </div>
+                <Box
+                  data={invSBox}
+                  caption="Inv-S-Box"
+                  value={valueSubStateDec}
+                />
+              </div>
+            </ul>
+          </article>
+          <h4 onClick={toggle} className="aes-decrypt-rounds">
+            Rounds 1, 2, 3, ...{data.key.length / 4 + 5}
+          </h4>
+          <article id="aes-decrypt-rounds">
+            <p>
+              Each intermediate round in AES decryption consists of four
+              operations applied in sequence on the state matrix:
+            </p>
+            <ul className="list">
+              <li>
+                <strong>Add Round Key</strong>
+              </li>
+              <div className="container flex center">
+                <div className="grid5">
+                  <State
+                    data={result.states0Hex[n + 5][5]}
+                    caption="Previous State"
+                    index={[0, 0]}
+                  />
+                  <p style={{ margin: "auto 0" }}>&oplus;</p>
+                  <State
+                    data={result.states0Hex[n + 5][4]}
+                    caption={`RoundKey${n + 5}`}
+                    index={[0, 0]}
+                  />
+                  <p style={{ margin: "auto 0" }}>&rArr;</p>
+                  <State
+                    data={result.states0Hex[n + 5][3]}
+                    caption="New State"
+                    index={[0, 0]}
+                  />
+                </div>
+              </div>
+              <li>
+                <strong>Inverse MixColumns:</strong>
+              </li>
+              <div className="container flex center">
+                <p style={{ textAlign: "left" }}>
+                  &bull; Click any byte in result Matrix (After MixColumns) to
+                  see how the MixColumns transformation works
+                </p>
+                <div className="grid5">
+                  <table>
+                    <caption>MixColumns matrix</caption>
+                    <tbody>
+                      {invMixMatHex.map((e, i) => {
+                        return (
+                          <tr>
+                            {e.map((e1, j) => {
+                              return (
+                                <td
+                                  style={
+                                    i === indexMix.i
+                                      ? { backgroundColor: "lightgreen" }
+                                      : {}
+                                  }
+                                >
+                                  <strong>
+                                    {e1
+                                      .toString(16)
+                                      .padStart(2, "0")
+                                      .toUpperCase()}
+                                  </strong>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <p style={{ margin: "auto 0" }}>*</p>
+                  <table>
+                    <caption>Previous State</caption>
+                    {result.states0Hex[n + 5][3].map((e, i) => {
+                      return (
+                        <tr>
+                          {e.map((e1, j) => {
+                            return (
+                              <td
+                                style={
+                                  j === indexMix.j
+                                    ? { backgroundColor: "lightgreen" }
+                                    : {}
+                                }
+                              >
+                                <span>{e1}</span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </table>
+                  <p style={{ margin: "auto 0" }}>&rArr;</p>
+                  <table>
+                    <caption>InvMixColumns</caption>
+                    <tbody>
+                      {result.states0Hex[n + 5][2].map((e, i) => {
+                        return (
+                          <tr>
+                            {e.map((e1, j) => {
+                              return (
+                                <td
+                                  className="pointer"
+                                  style={
+                                    j === indexMix.j && i === indexMix.i
+                                      ? { backgroundColor: "lightgreen" }
+                                      : {}
+                                  }
+                                  onClick={() =>
+                                    setIndexMix((prev) => {
+                                      return { ...prev, i: i, j: j };
+                                    })
+                                  }
+                                >
+                                  <span>{e1}</span>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <table>
+                  <tbody>
+                    <td>
+                      {invMixMatHex[indexMix.i][0]
+                        .toString(16)
+                        .padStart(2, "0")
+                        .toUpperCase()}
+                    </td>
+                    <p className="center">*</p>
+                    <td>{result.states0Hex[n + 5][3][0][indexMix.j]}</td>
+                    <p className="center">&oplus;</p>
+                    <td>
+                      {invMixMatHex[indexMix.i][1]
+                        .toString(16)
+                        .padStart(2, "0")
+                        .toUpperCase()}
+                    </td>
+                    <p className="center">*</p>
+                    <td>{result.states0Hex[n + 5][3][1][indexMix.j]}</td>
+                    <p className="center">&oplus;</p>
+                    <td>
+                      {invMixMatHex[indexMix.i][2]
+                        .toString(16)
+                        .padStart(2, "0")
+                        .toUpperCase()}
+                    </td>
+                    <p className="center">*</p>
+                    <td>{result.states0Hex[n + 5][3][2][indexMix.j]}</td>
+                    <p className="center">&oplus;</p>
+                    <td>
+                      {invMixMatHex[indexMix.i][3]
+                        .toString(16)
+                        .padStart(2, "0")
+                        .toUpperCase()}
+                    </td>
+                    <p className="center">*</p>
+                    <td>{result.states0Hex[n + 5][3][3][indexMix.j]}</td>
+                    <p className="center">=</p>
+                    <th>
+                      {result.states0Hex[n + 5][2][indexMix.i][indexMix.j]}
+                    </th>
+                  </tbody>
+                </table>
+                <p style={{ textAlign: "left" }}>
+                  To perform these arithmetic operations on bytes, first we
+                  convert each byte into its binary form,then we interpret this
+                  binary sequence as the coefficients of a polynomial of degree
+                  7
+                </p>
+                <table className="mix-grid4">
+                  <th>
+                    {invMixMatHex[indexMix.i][0]
+                      .toString(16)
+                      .padStart(2, "0")
+                      .toUpperCase()}
+                  </th>
+                  <td>
+                    <span>
+                      {invMixMatHex[indexMix.i][0].toString(2).padStart(8, "0")}
+                    </span>
+                  </td>
+                  <td>
+                    {invMixMatHex[indexMix.i][0]
+                      .toString(2)
+                      .padStart(8, "0")
+                      .split("")
+                      .map((e, i) => {
+                        return (
+                          <>
+                            {e}X<sup>{7 - i}</sup>
+                            {i !== 7 ? "+" : null}
+                          </>
+                        );
+                      })}
+                  </td>
+                  <td>
+                    {invMixMatHex[indexMix.i][0]
+                      .toString(2)
+                      .padStart(8, "0")
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                </table>
+                <table className="mix-grid4">
+                  <th>{result.states0Hex[n + 5][3][0][indexMix.j]}</th>
+                  <td>
+                    <span>{result.states0[n + 5][3][0][indexMix.j]}</span>
+                  </td>
+                  <td>
+                    {result.states0[n + 5][3][0][indexMix.j]
+                      .split("")
+                      .map((e, i) => {
+                        return (
+                          <>
+                            {e}X<sup>{7 - i}</sup>
+                            {i !== 7 ? "+" : null}
+                          </>
+                        );
+                      })}
+                  </td>
+                  <td>
+                    {result.states0[n + 5][3][0][indexMix.j]
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                </table>
+                <table className="mix-grid4">
+                  <th>
+                    {invMixMatHex[indexMix.i][0]
+                      .toString(16)
+                      .padStart(2, "0")
+                      .toUpperCase()}
+                    *{result.states0Hex[n + 5][3][0][indexMix.j]}
+                  </th>
+                  <>=</>
+                  <td>
+                    {galoisMultiply(
+                      result.states0[n + 5][3][0][indexMix.j],
+                      invMixMatHex[indexMix.i][0].toString(2).padStart(8, "0")
+                    )
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                  <td>
+                    <span>
+                      {galoisMultiply(
+                        result.states0[n + 5][3][0][indexMix.j],
+                        invMixMatHex[indexMix.i][0].toString(2).padStart(8, "0")
+                      )}
+                    </span>
+                  </td>
+                </table>
+                <hr />
+                <table className="mix-grid4">
+                  <th>
+                    {invMixMatHex[indexMix.i][1]
+                      .toString(16)
+                      .padStart(2, "0")
+                      .toUpperCase()}
+                  </th>
+                  <td>
+                    <span>
+                      {invMixMatHex[indexMix.i][1].toString(2).padStart(8, "0")}
+                    </span>
+                  </td>
+                  <td>
+                    {invMixMatHex[indexMix.i][1]
+                      .toString(2)
+                      .padStart(8, "0")
+                      .split("")
+                      .map((e, i) => {
+                        return (
+                          <>
+                            {e}X<sup>{7 - i}</sup>
+                            {i !== 7 ? "+" : null}
+                          </>
+                        );
+                      })}
+                  </td>
+                  <td>
+                    {invMixMatHex[indexMix.i][1]
+                      .toString(2)
+                      .padStart(8, "0")
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                  <th>{result.states0Hex[n + 5][3][1][indexMix.j]}</th>
+                  <td>
+                    <span>{result.states0[n + 5][3][1][indexMix.j]}</span>
+                  </td>
+                  <td>
+                    {result.states0[n + 5][3][1][indexMix.j]
+                      .split("")
+                      .map((e, i) => {
+                        return (
+                          <>
+                            {e}X<sup>{7 - i}</sup>
+                            {i !== 7 ? "+" : null}
+                          </>
+                        );
+                      })}
+                  </td>
+                  <td>
+                    {result.states0[n + 5][3][1][indexMix.j]
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                  <th>
+                    {invMixMatHex[indexMix.i][1]
+                      .toString(16)
+                      .padStart(2, "0")
+                      .toUpperCase()}
+                    *{result.states0Hex[n + 5][3][1][indexMix.j]}
+                  </th>
+                  <>=</>
+                  <td>
+                    {galoisMultiply(
+                      result.states0[n + 5][3][1][indexMix.j],
+                      invMixMatHex[indexMix.i][1].toString(2).padStart(8, "0")
+                    )
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                  <td>
+                    <span>
+                      {galoisMultiply(
+                        invMixMatHex[indexMix.i][1]
+                          .toString(2)
+                          .padStart(8, "0"),
+                        result.states0[n + 5][3][1][indexMix.j]
+                      )}
+                    </span>
+                  </td>
+                </table>
+                <hr />
+                <table className="mix-grid4">
+                  <th>
+                    {invMixMatHex[indexMix.i][2]
+                      .toString(16)
+                      .padStart(2, "0")
+                      .toUpperCase()}
+                  </th>
+                  <td>
+                    <span>
+                      {invMixMatHex[indexMix.i][2].toString(2).padStart(8, "0")}
+                    </span>
+                  </td>
+                  <td>
+                    {invMixMatHex[indexMix.i][2]
+                      .toString(2)
+                      .padStart(8, "0")
+                      .split("")
+                      .map((e, i) => {
+                        return (
+                          <>
+                            {e}X<sup>{7 - i}</sup>
+                            {i !== 7 ? "+" : null}
+                          </>
+                        );
+                      })}
+                  </td>
+                  <td>
+                    {invMixMatHex[indexMix.i][2]
+                      .toString(2)
+                      .padStart(8, "0")
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                  <th>{result.states0Hex[n + 5][3][2][indexMix.j]}</th>
+                  <td>
+                    <span>{result.states0[n + 5][3][2][indexMix.j]}</span>
+                  </td>
+                  <td>
+                    {result.states0[n + 5][3][2][indexMix.j]
+                      .split("")
+                      .map((e, i) => {
+                        return (
+                          <>
+                            {e}X<sup>{7 - i}</sup>
+                            {i !== 7 ? "+" : null}
+                          </>
+                        );
+                      })}
+                  </td>
+                  <td>
+                    {result.states0[n + 5][3][2][indexMix.j]
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+
+                  <th>
+                    {invMixMatHex[indexMix.i][2]
+                      .toString(16)
+                      .padStart(2, "0")
+                      .toUpperCase()}
+                    *{result.states0Hex[n + 5][3][2][indexMix.j]}
+                  </th>
+                  <>=</>
+                  <td>
+                    {galoisMultiply(
+                      result.states0[n + 5][3][2][indexMix.j],
+                      invMixMatHex[indexMix.i][2].toString(2).padStart(8, "0")
+                    )
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                  <td>
+                    <span>
+                      {galoisMultiply(
+                        invMixMatHex[indexMix.i][2]
+                          .toString(2)
+                          .padStart(8, "0"),
+                        result.states0[n + 5][3][2][indexMix.j]
+                      )}
+                    </span>
+                  </td>
+                </table>
+                <hr />
+                <table className="mix-grid4">
+                  <th>
+                    {invMixMatHex[indexMix.i][3]
+                      .toString(16)
+                      .padStart(2, "0")
+                      .toUpperCase()}
+                  </th>
+                  <td>
+                    <span>
+                      {invMixMatHex[indexMix.i][3].toString(2).padStart(8, "0")}
+                    </span>
+                  </td>
+                  <td>
+                    {invMixMatHex[indexMix.i][3]
+                      .toString(2)
+                      .padStart(8, "0")
+                      .split("")
+                      .map((e, i) => {
+                        return (
+                          <>
+                            {e}X<sup>{7 - i}</sup>
+                            {i !== 7 ? "+" : null}
+                          </>
+                        );
+                      })}
+                  </td>
+                  <td>
+                    {invMixMatHex[indexMix.i][3]
+                      .toString(2)
+                      .padStart(8, "0")
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                  <th>{result.states0Hex[n + 5][3][3][indexMix.j]}</th>
+                  <td>
+                    <span>{result.states0[n + 5][3][3][indexMix.j]}</span>
+                  </td>
+                  <td>
+                    {result.states0[n + 5][3][3][indexMix.j]
+                      .split("")
+                      .map((e, i) => {
+                        return (
+                          <>
+                            {e}X<sup>{7 - i}</sup>
+                            {i !== 7 ? "+" : null}
+                          </>
+                        );
+                      })}
+                  </td>
+                  <td>
+                    {result.states0[n + 5][3][3][indexMix.j]
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+
+                  <th>
+                    {invMixMatHex[indexMix.i][3]
+                      .toString(16)
+                      .padStart(2, "0")
+                      .toUpperCase()}
+                    *{result.states0Hex[n + 5][3][3][indexMix.j]}
+                  </th>
+                  <>=</>
+                  <td>
+                    {galoisMultiply(
+                      result.states0[n + 5][3][3][indexMix.j],
+                      invMixMatHex[indexMix.i][3].toString(2).padStart(8, "0")
+                    )
+                      .split("")
+                      .map((e, i) => {
+                        return e !== "0" && 7 - i > 1 ? (
+                          <>
+                            +X<sup>{7 - i}</sup>{" "}
+                          </>
+                        ) : e !== "0" && 7 - i === 1 ? (
+                          <>+X </>
+                        ) : e !== "0" && 7 - i === 0 ? (
+                          <>+1</>
+                        ) : null;
+                      })}
+                  </td>
+                  <td>
+                    <span>
+                      {galoisMultiply(
+                        invMixMatHex[indexMix.i][3]
+                          .toString(2)
+                          .padStart(8, "0"),
+                        result.states0[n + 5][3][3][indexMix.j]
+                      )}
+                    </span>
+                  </td>
+                </table>
+                <p
+                  style={{ textAlign: "left", color: "red", fontSize: "12px" }}
+                >
+                  * if the result of the multiplication contains a term with
+                  degree 8 or highe,we need to reduce the result modulo an
+                  irreducible polynomial of degree 8,we can replace any term
+                  with degree 8 or higher with an equivalent term that has
+                  degree less than 8, using the relation x<sup>8</sup> = x
+                  <sup>4</sup> + x<sup>3</sup> + x + 1. then we simplify the
+                  result by removing any terms that are equivalent modulo this
+                  polynomial.
+                </p>
+                <p style={{ textAlign: "left" }}>Now we XOR The results</p>
+                <table>
+                  {galoisMultiply(
+                    invMixMatHex[indexMix.i][0].toString(2).padStart(8, "0"),
+                    result.states0[n + 5][3][0][indexMix.j]
+                  )
+                    .split("")
+                    .map((e) => {
+                      return <td>{e}</td>;
+                    })}
+                </table>
+                <table>
+                  {galoisMultiply(
+                    invMixMatHex[indexMix.i][1].toString(2).padStart(8, "0"),
+                    result.states0[n + 5][3][1][indexMix.j]
+                  )
+                    .split("")
+                    .map((e) => {
+                      return <td>{e}</td>;
+                    })}
+                </table>
+                <table>
+                  {galoisMultiply(
+                    invMixMatHex[indexMix.i][2].toString(2).padStart(8, "0"),
+                    result.states0[n + 5][3][2][indexMix.j]
+                  )
+                    .split("")
+                    .map((e) => {
+                      return <td>{e}</td>;
+                    })}
+                </table>
+                <table>
+                  {galoisMultiply(
+                    invMixMatHex[indexMix.i][3].toString(2).padStart(8, "0"),
+                    result.states0[n + 5][3][3][indexMix.j]
+                  )
+                    .split("")
+                    .map((e) => {
+                      return <td>{e}</td>;
+                    })}
+                </table>
+                <hr />
+                <table>
+                  {result.states0[n + 5][2][indexMix.i][indexMix.j]
+                    .split("")
+                    .map((e) => {
+                      return <td>{e}</td>;
+                    })}
+                </table>
+                <p style={{ textAlign: "left" }}>
+                  and the resultant binary number represent{" "}
+                  <span>
+                    {result.states0Hex[n + 5][2][indexMix.i][indexMix.j]}
+                  </span>
+                </p>
+              </div>
+              <li>
+                <strong>InvShiftRows</strong>
+              </li>
+              <div className="container  flex center">
+                <div className="grid3">
+                  <State
+                    data={result.states0Hex[n + 5][2]}
+                    caption="Previous State"
+                    index={[1, 0]}
+                  />
+                  <p style={{ margin: "auto 0" }}>&rArr;</p>
+                  <State
+                    data={result.states0Hex[n + 5][1]}
+                    caption="InvShiftRows"
+                    index={[1, 1]}
+                  />
+                </div>
+              </div>
+              <li>
+                <strong>InvSubBytes</strong>
+              </li>
+              <div className="container  flex center">
+                <div className="grid3">
+                  <State
+                    data={result.states0Hex[n + 5][1]}
+                    caption="Previous State"
+                    index={[1, 0]}
+                  />
+                  <p style={{ margin: "auto 0" }}>&rArr;</p>
+                  <State
+                    data={result.states0Hex[n + 5][0]}
+                    caption="InvSubBytes"
+                    index={[1, 1]}
+                  />
+                </div>
+              </div>
+            </ul>
+            <p>
+              These four operations are applied in sequence on the state matrix
+              in each intermediate round, except for the final round
+            </p>
+            <div className="container flex">
+              <table>
+                <th>i</th>
+                <th>
+                  State<sub>i-1</sub>
+                </th>
+                <th>
+                  Round Key<sub>{n + 6}-i</sub>
+                </th>
+                <th>AddRoundKey</th>
+                <th>InvMixColumn</th>
+                <th>InvShiftRows</th>
+                <th>InvSubBytes</th>
+                <tbody>
+                  {result.states0Hex
+                    .slice(1, n + 6)
+                    .reverse()
+                    .map((e, i) => {
+                      return (
+                        <tr>
+                          <th>{i + 1}</th>
+                          {e.reverse().map((ee) => {
+                            return ee ? (
+                              <td
+                                style={{
+                                  border: "none",
+                                  backgroundColor: "transparent",
+                                }}
+                              >
+                                <div>
+                                  {ee.map((e, i) => {
+                                    return (
+                                      <tr className="all-rounds">
+                                        {e.map((e1, j) => {
+                                          return (
+                                            <td>
+                                              <span>{e1}</span>
+                                            </td>
+                                          );
+                                        })}
+                                      </tr>
+                                    );
+                                  })}
+                                </div>
+                              </td>
+                            ) : (
+                              <td
+                                style={{
+                                  border: "none",
+                                  backgroundColor: "transparent",
+                                }}
+                              ></td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <h4 onClick={toggle} className="aes-decrypt-last">
+            Rounds {n + 6}
+          </h4>
+          <article id="aes-decrypt-last">
+            <p>In this Round we Add RoundKey0 to the previous State </p>
             <div className="container flex center">
               <div className="grid5">
                 <State
-                  data={result.statesDec0Hex[0][0]}
-                  caption="CipherText"
+                  data={result.states0Hex[0][5]}
+                  caption="Previous State"
                   index={[0, 0]}
                 />
                 <p style={{ margin: "auto 0" }}>&oplus;</p>
                 <State
-                  data={result.statesDec0Hex[0][4]}
-                  caption={`RoundKey${n + 6}`}
+                  data={result.states0Hex[0][4]}
+                  caption="RoundKey0"
                   index={[0, 0]}
                 />
                 <p style={{ margin: "auto 0" }}>&rArr;</p>
                 <State
-                  data={result.statesDec0Hex[0][5]}
-                  caption="State0"
+                  data={result.states0Hex[0][0]}
+                  caption="PlainText"
                   index={[0, 0]}
                 />
               </div>
-            </div>
-            <h4 onClick={toggle} className="aes-decrypt-rounds">
-              Rounds 1, 2, 3, ...{data.key.length / 4 + 5}
-            </h4>
-            <article id="aes-decrypt-rounds">
-              <p>
-                Each intermediate round in AES encryption consists of four
-                operations applied in sequence on the state matrix: byte
-                substitution, shift rows, mix columns, and add round key.
+              <p style={{ textAlign: "left" }}>
+                We get the the first block of Decrypted text by converting last
+                state to original form
               </p>
-              <ul className="list">
-                <li>
-                  <strong>Inversr ShiftRows:</strong>
-                </li>
-                <div className="container flex center">
-                  <div className="grid3">
-                    <State
-                      data={result.statesDec0Hex[1][0]}
-                      caption="CipherText"
-                      index={[0, 0]}
-                    />
-                    <p style={{ margin: "auto 0" }}>&rArr;</p>
-                    <State
-                      data={result.statesDec0Hex[1][1]}
-                      caption="InvShiftRows"
-                      index={[0, 0]}
-                    />
-                  </div>
-                </div>
-                <li>
-                  <strong>Inv :</strong>
-                  <div className="container flex center">
-                    <div className="grid3">
-                      <State
-                        data={result.statesDec0Hex[1][1]}
-                        caption="Previous State"
-                        index={[0, 0]}
-                      />
-                      <p style={{ margin: "auto 0" }}>&rArr;</p>
-                      <State
-                        data={result.statesDec0Hex[1][2]}
-                        caption="InvSubBytes"
-                        index={[0, 0]}
-                      />
-                    </div>
-                    <Box data={invSBox} caption={"Inv-S-Box"} value={[0, 0]} />
-                  </div>
-                </li>
-                <li>
-                  <strong>Inv:</strong>
-                  <div className="container flex center">
-                    <div className="grid3">
-                      <State
-                        data={result.statesDec0Hex[1][2]}
-                        caption="Previous State"
-                        index={[0, 0]}
-                      />
-                      <p style={{ margin: "auto 0" }}>&rArr;</p>
-                      <State
-                        data={result.statesDec0Hex[1][3]}
-                        caption="InvMixColumn"
-                        index={[0, 0]}
-                      />
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <strong>Inv:</strong>
-                  <div className="container flex center">
-                    <div className="grid5">
-                      <State
-                        data={result.statesDec0Hex[1][3]}
-                        caption="Previous State"
-                        index={[0, 0]}
-                      />
-                      <p style={{ margin: "auto 0" }}>&oplus;</p>
-                      <State
-                        data={result.statesDec0Hex[1][4]}
-                        caption={`RoundKey${n + 5}`}
-                        index={[0, 0]}
-                      />
-                      <p style={{ margin: "auto 0" }}>&rArr;</p>
-                      <State
-                        data={result.statesDec0Hex[1][5]}
-                        caption="State1"
-                        index={[0, 0]}
-                      />
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </article>
-          </article>
-          <div className="container flex">
-            <table>
-              <th>i</th>
-              <th>
-                State<sub>i-1</sub>
-              </th>
-              <th>SubBytes</th>
-              <th>ShiftRows</th>
-              <th>MixColumns</th>
-              <th>
-                Round Key<sub>i</sub>
-              </th>
-              <th>
-                State<sub>i</sub>
-              </th>
-              <tbody>
-                {result.statesDec0Hex.map((e, i) => {
-                  return (
-                    <tr>
-                      <th>{i + 1}</th>
-                      {e.map((ee) => {
-                        return ee ? (
-                          <td
-                            style={{
-                              border: "none",
-                              backgroundColor: "transparent",
-                            }}
-                          >
-                            <div>
-                              {ee.map((e, i) => {
-                                return (
-                                  <tr className="all-rounds">
-                                    {e.map((e1, j) => {
-                                      return (
-                                        <td>
-                                          <span>{e1}</span>
-                                        </td>
-                                      );
-                                    })}
-                                  </tr>
-                                );
-                              })}
-                            </div>
-                          </td>
-                        ) : (
-                          <td
-                            style={{
-                              border: "none",
-                              backgroundColor: "transparent",
-                            }}
-                          ></td>
-                        );
-                      })}
-                    </tr>
-                  );
+              <Block
+                data={result.appendedPlaintextHex.slice(0, 16)}
+                name="PlainText"
+              />
+              <hr />
+              <p style={{ textAlign: "left" }}>The whole decrypted text is</p>
+              <p style={{ textAlign: "left" }}>
+                {result.appendedPlaintextHex.map((e) => {
+                  return <>{e} </>;
                 })}
-              </tbody>
-            </table>
-          </div>
+              </p>
+              <p style={{ textAlign: "left" }}>
+                As we have used the PKCS#7, hence the last byte of encrypted
+                text refer to the number of padded bytes to original plainText
+              </p>
+              <p style={{ textAlign: "left" }}>
+                <strong>{result.appendedPlaintextHex.slice(-1)}</strong> ={" "}
+                <span>
+                  {parseInt(result.appendedPlaintextHex.slice(-1), 16)}
+                </span>
+                &rArr; we remove the last{" "}
+                {parseInt(result.appendedPlaintextHex.slice(-1), 16)} bytes
+              </p>
+              <p style={{ textAlign: "left" }}>
+                The Plain Text in hexadecimal format is{" "}
+                <span>
+                  {result.appendedPlaintextHex
+                    .slice(
+                      0,
+                      -parseInt(result.appendedPlaintextHex.slice(-1), 16)
+                    )
+                    .map((e) => {
+                      return <>{e} </>;
+                    })}
+                </span>
+              </p>
+              <p style={{ textAlign: "left" }}>
+                By converting it from hexadecimal form , to strings using ASCII
+                table, the plain text will be
+              </p>
+              <p style={{ textAlign: "left" }}>
+                <span>{data.plainText}</span>
+              </p>
+            </div>
+          </article>
         </article>
       </div>
     </section>
