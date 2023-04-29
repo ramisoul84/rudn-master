@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/rudn-master/static/css/main.8b31a6e3.css",
+    "main.js": "/rudn-master/static/js/main.0fe4c5a0.js",
+    "static/media/keyExpansion.svg": "/rudn-master/static/media/keyExpansion.25c933bdfc963e56509d6135ca383bf8.svg",
+    "index.html": "/rudn-master/index.html",
+    "main.8b31a6e3.css.map": "/rudn-master/static/css/main.8b31a6e3.css.map",
+    "main.0fe4c5a0.js.map": "/rudn-master/static/js/main.0fe4c5a0.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.8b31a6e3.css",
+    "static/js/main.0fe4c5a0.js"
+  ]
+}
