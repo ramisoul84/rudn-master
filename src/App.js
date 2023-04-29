@@ -1,25 +1,47 @@
-import logo from './logo.svg';
-import './App.css';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Root from "./components/Root";
+import Error from "./pages/Error";
+import Intro from "./pages/Intro";
+import Home from "./pages/Home";
+import AES from "./pages/AES";
+import ECC from "./pages/ECC";
+import SHA from "./pages/SHA";
+import Hybrid from "./pages/Hybrid";
+const router = createBrowserRouter([
+  {
+    path: "/rudn-master",
+    element: <Root />,
+    errorElement: <Error />,
+    children: [
+      {
+        path: "/rudn-master/",
+        element: <Intro />,
+      },
+      {
+        path: "/rudn-master/home",
+        element: <Home />,
+      },
+      {
+        path: "/rudn-master/aes",
+        element: <AES />,
+      },
+      {
+        path: "/rudn-master/ecc",
+        element: <ECC />,
+      },
+      {
+        path: "/rudn-master/sha",
+        element: <SHA />,
+      },
+      {
+        path: "/rudn-master/hybrid",
+        element: <Hybrid />,
+      },
+    ],
+  },
+]);
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
-
+const App = () => {
+  return <RouterProvider router={router} />;
+};
 export default App;

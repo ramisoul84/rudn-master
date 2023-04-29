@@ -1,0 +1,48 @@
+footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40px;
+  background-color: var(--color-light);
+  border-top: 3px solid var(--color-dark);
+  box-shadow: 0 4px 10px var(--color-shadow);
+  -webkit-animation: slide-in-bottom 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+    both;
+  animation: slide-in-bottom 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+footer p {
+  line-height: 40px;
+  text-align: center;
+  font-family: "Courgette";
+}
+
+/**
+ * ----------------------------------------
+ * animation slide-in-bottom
+ * ----------------------------------------
+ */
+@-webkit-keyframes slide-in-bottom {
+  0% {
+    -webkit-transform: translateY(1000px);
+    transform: translateY(1000px);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes slide-in-bottom {
+  0% {
+    -webkit-transform: translateY(1000px);
+    transform: translateY(1000px);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

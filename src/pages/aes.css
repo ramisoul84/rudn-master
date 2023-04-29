@@ -1,0 +1,51 @@
+#aes form {
+  padding: 15px 50px;
+}
+
+#aes form textarea {
+  padding: 4px;
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  resize: none;
+}
+
+#aes form input[type="submit"] {
+  margin-top: 10px;
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  background-color: var(--color-dark);
+  color: var(--color-light);
+  font-size: 25px;
+  font-weight: 800;
+}
+#aes form input[type="submit"]:hover {
+  cursor: pointer;
+  background-color: var(--color-light);
+  color: var(--color-dark);
+}
+#aes img {
+  padding: 20px;
+  width: 100%;
+}
+#result {
+  display: none;
+}
+
+#aes .all-rounds {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 4px;
+  margin: 5px 10px;
+}
+#aes .round-last {
+  display: grid;
+  grid-template-columns: 2fr 2fr 2fr 0.5fr 2fr 0.5fr 2fr;
+  text-align: center;
+}
+
+#aes .mix-grid4 {
+  display: grid;
+  grid-template-columns: 1fr 2fr 3fr 3fr;
+  gap: 3px;
+  margin-bottom: 3px;
+}
