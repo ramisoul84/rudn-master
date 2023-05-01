@@ -117,6 +117,10 @@ span {
   padding: 0 2px;
   font-weight: 800;
 }
+small {
+  font-size: 12px;
+  color: #808080;
+}
 #body {
   background-color: var(--color-light);
   margin: 60px 0 80px 0px;
@@ -164,6 +168,11 @@ span {
 .grid3 {
   display: grid;
   grid-template-columns: 2fr 1fr 2fr;
+}
+.grid4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 2px;
 }
 .grid5 {
   display: grid;

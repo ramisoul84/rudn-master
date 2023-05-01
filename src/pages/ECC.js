@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import "./ecc.css";
-import { pointsGen, addPoints } from "../algorithms/ecc";
+import { useState } from "react";
+
 import {
   ScatterChart,
   Scatter,
@@ -10,6 +9,9 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import "./ecc.css";
+import { pointsGen, addPoints, scalarMultiply } from "../algorithms/ecc";
+// Prime numn 3>p>1000
 const pNumbers = [
   5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79,
   83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163,
@@ -29,11 +31,20 @@ const ECC = () => {
     b: 0,
     p: 5,
   });
-  const [addPoint, setAddPoint] = useState({
-    pPoint: [null, null],
-    qPoint: [null, null],
-  });
   const [points, setPoints] = useState([]);
+  const [point, setPoint] = useState({
+    P: [null, null],
+    Q: [null, null],
+  });
+  const [add, setAdd] = useState({
+    m: null,
+    R: [null, null],
+  });
+  const [scalar, setScalar] = useState({
+    K: null,
+    G: [null, null],
+  });
+
   const handleChange = (e) => {
     const genCurve = document.getElementById("genCurve");
     genCurve.style.display = "none";
@@ -46,8 +57,21 @@ const ECC = () => {
     });
   };
   const handleChangeAdd = (e) => {
+    const genCurve = document.getElementById("add-res");
+    genCurve.style.display = "none";
     const { value, name } = e.target;
-    setAddPoint((prev) => {
+    setPoint((prev) => {
+      return {
+        ...prev,
+        [name]: value.split(","),
+      };
+    });
+  };
+  const handleChangeScalar = (e) => {
+    const genCurve = document.getElementById("scalar-res");
+    genCurve.style.display = "none";
+    const { value, name } = e.target;
+    setScalar((prev) => {
       return {
         ...prev,
         [name]: value.split(","),
@@ -59,6 +83,32 @@ const ECC = () => {
     const genCurve = document.getElementById("genCurve");
     genCurve.style.display = "block";
     setPoints(pointsGen(curve.a, curve.b, curve.p));
+  };
+  const handleSubmitAdd = (e) => {
+    const genCurve = document.getElementById("add-res");
+    genCurve.style.display = "block";
+    e.preventDefault();
+    const { R, m } = addPoints(point.P, point.Q, curve.a, curve.b, curve.p);
+    setAdd((prev) => {
+      return {
+        ...prev,
+        R: R,
+        m: m,
+      };
+    });
+  };
+  const handleSubmitScalar = (e) => {
+    const genCurve = document.getElementById("scalar-res");
+    genCurve.style.display = "block";
+    e.preventDefault();
+    const { R, m } = addPoints(point.P, point.Q, curve.a, curve.b, curve.p);
+    setAdd((prev) => {
+      return {
+        ...prev,
+        R: R,
+        m: m,
+      };
+    });
   };
   const toggle = (e) => {
     const el = e.target.className;
@@ -164,20 +214,21 @@ const ECC = () => {
               </sub>
             </li>
             <li>
-              Curve Order |E|= <span>{points.length + 1}</span> (Number of
-              Points in this curve)
+              Curve Order |E|= <span>{points.length}</span> (Number of Points in
+              this curve)
             </li>
             <li>
               Points:
               <p style={{ fontSize: "0.7rem" }}>
                 {points.map((e, i) => {
-                  return (
+                  return e !== "" ? (
                     <>
                       ({e[0]},{e[1]})
                     </>
+                  ) : (
+                    <>,and O (Infinity)</>
                   );
                 })}
-                ,and O (Infinity)
               </p>
             </li>
           </ul>
@@ -199,9 +250,17 @@ const ECC = () => {
         </div>
         <h2>Points Operations on an EC over 𝔽p</h2>
         <p>
-          Given two points P = (x1, y1) and Q = (x2, y2) on an elliptic curve{" "}
-          <strong>E</strong> defined by the equation y<sup>2</sup>=x<sup>3</sup>
-          +<strong>a</strong>
+          Given two points P
+          <small>
+            (x<sub>1</sub>, y<sub>1</sub>)
+          </small>{" "}
+          and Q
+          <small>
+            (x
+            <sub>2</sub>, y<sub>2</sub>)
+          </small>{" "}
+          on an elliptic curve <strong>E</strong> defined by the equation y
+          <sup>2</sup>=x<sup>3</sup>+<strong>a</strong>
           x+<strong>b</strong> (mod <strong>p</strong>)
         </p>
         <p>operation is defined as follows:</p>
@@ -216,45 +275,111 @@ const ECC = () => {
               <strong>P ≠ Q</strong> &rArr; R=P+Q is defined as follows:
             </p>
             <ul className="list">
-              <li>Compute the slope of the line passing through P and Q:</li>m =
-              (y2 - y1) / (x2 - x1)
-              <li>Compute the x-coordinate of the point R:</li>
-              x3 = m^2 - x1 - x2
-              <li>Compute the y-coordinate of the point R:</li>
-              y3 = y1 + m(x3 - x1) The point R = (x3, y3) is the sum of P and Q:
-              R = P + Q.
+              <li>
+                <p>Compute the slope of the line passing through P and Q:</p>
+                <p>
+                  m = (y<sub>2</sub> - y<sub>1</sub>) / (x<sub>2</sub> - x
+                  <sub>1</sub>) (mod p)
+                </p>
+              </li>
+              <li>
+                <p>Compute the x-coordinate of the point R:</p>
+                <p>
+                  x<sub>3</sub> = m<sup>2</sup> - x<sub>1</sub> - x<sub>2</sub>{" "}
+                  (mod p)
+                </p>
+              </li>
+              <li>
+                <p>Compute the y-coordinate of the point R:</p>
+                <p>
+                  y<sub>3</sub> = y<sub>1</sub> + m(x<sub>3</sub> - x
+                  <sub>1</sub>) (mod p)
+                </p>
+              </li>
             </ul>
+            <p>
+              The point R
+              <small>
+                (x
+                <sub>3</sub>, y<sub>3</sub>)
+              </small>{" "}
+              is the result of P + Q:
+            </p>
             <br />
             <p>
               <strong>P = Q</strong> &rArr; R=2P is defined as follows:
             </p>
-
-            <form>
-              <label>P (x1, y1)</label>
+            <ul className="list">
+              <li>
+                <p>
+                  Compute the slope of the tangent line to the curve at point P:
+                </p>
+                <p>
+                  m=(3x<sub>1</sub>
+                  <sup>2</sup>+a)⁄(2y<sub>1</sub>)(mod p)
+                </p>
+              </li>
+              <li>
+                <p>Compute the x-coordinate of the point R:</p>
+                <p>
+                  x<sub>3</sub> = m<sup>2</sup> - 2x<sub>1</sub> (mod p)
+                </p>
+              </li>
+              <li>
+                <p>Compute the y-coordinate of the point R:</p>
+                <p>
+                  y<sub>3</sub> = m(x<sub>1</sub>-x<sub>3</sub>)-y<sub>1</sub>{" "}
+                  (mod p)
+                </p>
+              </li>
+            </ul>
+            <p>
+              The point R
+              <small>
+                (x
+                <sub>3</sub>, y<sub>3</sub>)
+              </small>{" "}
+              is the result of 2P:
+            </p>
+            <form onSubmit={handleSubmitAdd}>
+              <label>
+                P{" "}
+                <small>
+                  (x<sub>1</sub>, y<sub>1</sub>)
+                </small>
+              </label>
               <select
-                name="pPoint"
-                placeholder="--Select P--"
-                value={addPoint.pPoint}
+                name="P"
+                value={point.P}
                 onChange={handleChangeAdd}
+                required
               >
+                <option value={null}>-- Select P --</option>
                 {points.map((e) => {
                   return (
                     <option value={e}>
-                      ({e[0]},{e[1]})
+                      {e !== "" ? `(${e[0]}, ${e[1]})` : "O-Infinity"}
                     </option>
                   );
                 })}
               </select>
-              <label>Q (x2, y2)</label>
+              <label>
+                Q{" "}
+                <small>
+                  (x<sub>2</sub>, y<sub>2</sub>)
+                </small>
+              </label>
               <select
-                name="qPoint"
-                value={addPoint.qPoint}
+                name="Q"
+                value={point.Q}
                 onChange={handleChangeAdd}
+                required
               >
+                <option value={null}>-- Select Q --</option>
                 {points.map((e) => {
                   return (
                     <option value={e}>
-                      ({e[0]},{e[1]})
+                      {e !== "" ? `(${e[0]}, ${e[1]})` : "O-Infinity"}
                     </option>
                   );
                 })}
@@ -262,22 +387,53 @@ const ECC = () => {
               <input
                 type="submit"
                 value={
-                  addPoint.pPoint[0] === addPoint.qPoint[0] &&
-                  addPoint.pPoint[1] === addPoint.qPoint[1]
+                  point.P[0] === point.Q[0] && point.P[1] === point.Q[1]
                     ? "Double"
                     : "Add"
                 }
               />
             </form>
-            <div className="container"></div>
-
-            {addPoints(
-              addPoint.pPoint,
-              addPoint.pPoint,
-              curve.a,
-              curve.b,
-              curve.p
-            )}
+            <div className="container" id="add-res">
+              <p>
+                {point.P[0] === "" ? (
+                  <strong>O</strong>
+                ) : (
+                  <>
+                    <strong>P</strong>
+                    <small>
+                      ({point.P[0]},{point.P[1]})
+                    </small>
+                  </>
+                )}{" "}
+                +{" "}
+                {point.Q[0] === "" ? (
+                  <strong>O</strong>
+                ) : (
+                  <>
+                    <strong>Q</strong>
+                    <small>
+                      ({point.Q[0]},{point.Q[1]})
+                    </small>
+                  </>
+                )}{" "}
+                ={" "}
+                {point.P[0] === "" && point.Q[0] === "" ? (
+                  <strong>O</strong>
+                ) : point.P[0] === "" && point.Q[0] !== "" ? (
+                  <>
+                    <strong>Q</strong>({add.R[0]},{add.R[1]})
+                  </>
+                ) : point.P[0] !== "" && point.Q[0] === "" ? (
+                  <>
+                    <strong>P</strong>({add.R[0]},{add.R[1]})
+                  </>
+                ) : (
+                  <>
+                    <strong>R</strong>({add.R[0]},{add.R[1]})
+                  </>
+                )}
+              </p>
+            </div>
           </article>
 
           <li>
@@ -285,7 +441,61 @@ const ECC = () => {
               Scalar Multiplication
             </h4>
           </li>
-          <article id="ecc-scalar-multi"></article>
+          <article id="ecc-scalar-multi">
+            <form onSubmit={handleSubmitScalar}>
+              <label>Generator Point G</label>
+              <select
+                name="G"
+                value={scalar.G}
+                onChange={handleChangeScalar}
+                required
+              >
+                <option value={null}>-- Select G --</option>
+                {points.slice(0, points.length - 1).map((e) => {
+                  return (
+                    <option value={e}>
+                      ({e[0]},{e[1]})
+                    </option>
+                  );
+                })}
+              </select>
+              <label>K</label>
+              <input
+                type="number"
+                name="K"
+                value={scalar.K}
+                onChange={handleChangeScalar}
+              />
+              <input type="submit" value="Multiply" />
+            </form>
+            <div className="container flex" id="scalar-res">
+              <p>
+                <strong>{scalar.K}</strong>*
+                <strong>
+                  ({scalar.G[0]},{scalar.G[1]})
+                </strong>
+              </p>
+              <div>
+                <table className="flex">
+                  {scalarMultiply(
+                    scalar.K,
+                    [Number(scalar.G[0]), Number(scalar.G[1])],
+                    curve.a,
+                    curve.b,
+                    curve.p
+                  ).map((e) => {
+                    return (
+                      <tr className="grid4">
+                        {e.map((e1) => {
+                          return <td>{e1}</td>;
+                        })}
+                      </tr>
+                    );
+                  })}
+                </table>
+              </div>
+            </div>
+          </article>
         </ul>
       </div>
     </section>

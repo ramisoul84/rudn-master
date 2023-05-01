@@ -64,9 +64,10 @@ const Hybrid = () => {
           <h1>{method.curve} Parameters</h1>
           <ul className="list">
             <li>Generator Point (G)</li>
-            <p>X: {usedCurve.g.getX().toString(16).toUpperCase()}</p>
-            <p>Y: {usedCurve.g.getY().toString(16).toUpperCase()}</p>
+            <p>X: {usedCurve.g.getX().toString().toUpperCase()}</p>
+            <p>Y: {usedCurve.g.getY().toString().toUpperCase()}</p>
             <p>G: {usedCurve.g.encode("hex").toUpperCase()}</p>
+
             <li>Order (n)</li>
             <p>{usedCurve.n.toString(16).toUpperCase()}</p>
           </ul>
