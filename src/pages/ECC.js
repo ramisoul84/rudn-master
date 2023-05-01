@@ -197,7 +197,7 @@ const ECC = () => {
             </ScatterChart>
           </ResponsiveContainer>
         </div>
-        <h2>Points Operations n an EC over 𝔽p</h2>
+        <h2>Points Operations on an EC over 𝔽p</h2>
         <p>
           Given two points P = (x1, y1) and Q = (x2, y2) on an elliptic curve{" "}
           <strong>E</strong> defined by the equation y<sup>2</sup>=x<sup>3</sup>
@@ -208,18 +208,13 @@ const ECC = () => {
         <ul className="list">
           <li>
             <h4 onClick={toggle} className="ecc-point-addition">
-              Point Addition
+              Points Addition & Doubling
             </h4>
           </li>
           <article id="ecc-point-addition">
-            <ul className="list">
-              <li>
-                <strong>P ≠ Q</strong> and{" "}
-              </li>
-            </ul>
-            In ECC over a finite field 𝔽p, the point addition operation is
-            defined as follows:
-            <p>In this case P ≠ Q &rArr; R=P+Q is defined as follows:</p>
+            <p>
+              <strong>P ≠ Q</strong> &rArr; R=P+Q is defined as follows:
+            </p>
             <ul className="list">
               <li>Compute the slope of the line passing through P and Q:</li>m =
               (y2 - y1) / (x2 - x1)
@@ -229,14 +224,53 @@ const ECC = () => {
               y3 = y1 + m(x3 - x1) The point R = (x3, y3) is the sum of P and Q:
               R = P + Q.
             </ul>
-            <p> {addPoint.pPoint[1]}</p>
-            {addPoint.qPoint}
+            <br />
             <p>
-              {addPoint.pPoint[0] === addPoint.qPoint[0] &&
-              addPoint.pPoint[1] === addPoint.qPoint[1]
-                ? "same"
-                : "differ"}
+              <strong>P = Q</strong> &rArr; R=2P is defined as follows:
             </p>
+
+            <form>
+              <label>P (x1, y1)</label>
+              <select
+                name="pPoint"
+                placeholder="--Select P--"
+                value={addPoint.pPoint}
+                onChange={handleChangeAdd}
+              >
+                {points.map((e) => {
+                  return (
+                    <option value={e}>
+                      ({e[0]},{e[1]})
+                    </option>
+                  );
+                })}
+              </select>
+              <label>Q (x2, y2)</label>
+              <select
+                name="qPoint"
+                value={addPoint.qPoint}
+                onChange={handleChangeAdd}
+              >
+                {points.map((e) => {
+                  return (
+                    <option value={e}>
+                      ({e[0]},{e[1]})
+                    </option>
+                  );
+                })}
+              </select>
+              <input
+                type="submit"
+                value={
+                  addPoint.pPoint[0] === addPoint.qPoint[0] &&
+                  addPoint.pPoint[1] === addPoint.qPoint[1]
+                    ? "Double"
+                    : "Add"
+                }
+              />
+            </form>
+            <div className="container"></div>
+
             {addPoints(
               addPoint.pPoint,
               addPoint.pPoint,
@@ -246,45 +280,6 @@ const ECC = () => {
             )}
           </article>
 
-          <li>
-            <h4 onClick={toggle} className="ecc-point-double">
-              Point Doubling
-            </h4>
-          </li>
-          <article id="ecc-point-double">
-            <div className="container"></div>
-          </article>
-          <form>
-            <label>P (x1, y1)</label>
-            <select
-              name="pPoint"
-              placeholder="--Select P--"
-              value={addPoint.pPoint}
-              onChange={handleChangeAdd}
-            >
-              {points.map((e) => {
-                return (
-                  <option value={e}>
-                    ({e[0]},{e[1]})
-                  </option>
-                );
-              })}
-            </select>
-            <label>Q (x2, y2)</label>
-            <select
-              name="qPoint"
-              value={addPoint.qPoint}
-              onChange={handleChangeAdd}
-            >
-              {points.map((e) => {
-                return (
-                  <option value={e}>
-                    ({e[0]},{e[1]})
-                  </option>
-                );
-              })}
-            </select>
-          </form>
           <li>
             <h4 onClick={toggle} className="ecc-scalar-multi">
               Scalar Multiplication

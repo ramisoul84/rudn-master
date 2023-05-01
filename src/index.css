@@ -143,6 +143,9 @@ span {
   display: flex;
   flex-direction: column;
 }
+.row {
+  flex-direction: row;
+}
 .center {
   text-align: center;
 }
@@ -153,7 +156,11 @@ span {
   background-color: var(--color-dark);
   color: var(--color-light);
 }
-
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 .grid3 {
   display: grid;
   grid-template-columns: 2fr 1fr 2fr;
@@ -175,6 +182,47 @@ span {
   font-family: "coda";
   -webkit-animation: text-focus-in 2s cubic-bezier(0.55, 0.085, 0.68, 0.53) both;
   animation: text-focus-in 2s cubic-bezier(0.55, 0.085, 0.68, 0.53) both;
+}
+#hybrid form {
+  padding: 10px;
+}
+#hybrid legend {
+  margin-left: 25px;
+  padding: 5px;
+}
+#hybrid fieldset {
+  border-radius: 10px;
+  border: 2px solid var(--color-dark);
+}
+#hybrid form input[type="submit"] {
+  margin-top: 10px;
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  background-color: var(--color-dark);
+  color: var(--color-light);
+  font-size: 25px;
+  font-weight: 800;
+}
+#hybrid form input[type="submit"]:hover {
+  cursor: pointer;
+  background-color: var(--color-light);
+  color: var(--color-dark);
+}
+#hybrid img {
+  width: 50px;
+  border-radius: 10px;
+}
+#hybrid .profile {
+  width: 50px;
+  text-align: center;
+}
+#hybrid-conf {
+  display: none;
+}
+#hybrid .profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 7fr;
+  gap: 10px;
 }
 
 /**

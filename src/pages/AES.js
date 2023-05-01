@@ -252,9 +252,15 @@ const AES = () => {
             <span>({form.version}-bit)</span> key into hexadecimal format:
           </p>
           <Block
-            data={result.appendedPlaintextHex.slice(0, 16)}
-            name="PlainText"
+            data={data.plainText.substring(0, 16).split("")}
+            name="PlainText-Str"
           />
+          <Block
+            data={result.appendedPlaintextHex.slice(0, 16)}
+            name="PlainText-Hex"
+          />
+          <hr />
+          <Block data={data.key.split("")} name="Key-Str" />
           <Block
             data={data.key.split("").map((e) => {
               return e
@@ -263,7 +269,7 @@ const AES = () => {
                 .padStart(2, "0")
                 .toUpperCase();
             })}
-            name="Key"
+            name="Key-Hex"
           />
           <br />
           <th>CipherText:</th>
@@ -499,7 +505,7 @@ const AES = () => {
               </p>
               <Block
                 name={result.keyWordsTableHex[n][2][indexXorWord]}
-                data={result.keyWordsTable[n][3][indexXorWord].split("")}
+                data={result.keyWordsTable[n][2][indexXorWord].split("")}
               />
               <Block
                 name={result.keyWordsTableHex[n][3][indexXorWord]}

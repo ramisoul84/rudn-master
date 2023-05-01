@@ -1,6 +1,12 @@
-const arr = [1, 2, 3, 4, 5];
-const arr1 = arr.slice();
+import { ec } from "elliptic";
 
-arr1.reverse();
-console.log(arr);
-console.log(arr1);
+// Replace this with your own private key
+const privateKey =
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+const curve = new ec("secp256k1");
+const keyPair = curve.keyFromPrivate(privateKey);
+
+const publicKey = keyPair.getPublic("hex");
+
+console.log("Public key: ", publicKey);
