@@ -82,8 +82,6 @@ function modInverse(a, m) {
 // Scalat Multiplication
 const scalarMultiply = (k, G, a, b, p) => {
   [k, a, b, p] = [Number(k), Number(a), Number(b), Number(p)];
-  console.log(k, a, b, p);
-  console.log(G);
   const bin = parseInt(k, 10).toString(2);
   let newpoint = G;
   let order = 1;
@@ -120,6 +118,32 @@ const isOnCurve = (point, a, b, p) => {
   const y = point[1];
   return (y * y - x * x * x - a * x - b) % p === 0;
 };
+/*
+const secp256k1 = (k) => {
+  const G = {
+    x: BigInt(
+      "0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"
+    ),
+    y: BigInt(
+      "0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8"
+    ),
+  };
+  const b = BigInt(7);
+  const a = BigInt(0);
+  const p = BigInt(
+    "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F"
+  );
+  let m;
+  m = (3 * G.x * G.x + a) * modInverseBig(2 * G.y, p);
+  console.log(a);
+  console.log(b);
+  console.log(p);
+  console.log(G.x);
+  console.log(G.y);
+  console.log(m);
+};
+*/
 export { pointsGen, addPoints, scalarMultiply };
 
 scalarMultiply(73, [3, 6], 2, 3, 97);
+//secp256k1(256);

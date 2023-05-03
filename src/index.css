@@ -182,7 +182,9 @@ small {
   display: grid;
   grid-template-columns: 2fr 0.5fr 2fr 0.5fr 2fr 0.5fr 2fr;
 }
-
+.key-gen {
+  gap: 2px;
+}
 #intro h5 {
   height: 100%;
   text-align: center;
@@ -218,12 +220,14 @@ small {
   color: var(--color-dark);
 }
 #hybrid img {
-  width: 50px;
+  width: 100%;
   border-radius: 10px;
+  padding: 15px 5px 0 5px;
 }
 #hybrid .profile {
-  width: 50px;
+  width: 100%;
   text-align: center;
+  padding: 0 10px;
 }
 #hybrid-conf {
   display: none;
@@ -233,7 +237,36 @@ small {
   grid-template-columns: 1fr 7fr;
   gap: 10px;
 }
-
+#hybrid button {
+  margin-top: 5px;
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  background-color: var(--color-dark);
+  color: var(--color-light);
+  font-size: 18px;
+  font-weight: 400;
+}
+#hybrid button:hover {
+  cursor: pointer;
+  background-color: var(--color-light);
+  color: var(--color-dark);
+}
+#hybrid button:disabled {
+  background-color: gray;
+  color: var(--color-dark);
+}
+#hybrid textarea {
+  padding: 4px;
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  resize: none;
+}
+.break {
+  word-break: break-all;
+}
+.pad5 {
+  padding: 0 10px;
+}
 /**
  * ----------------------------------------
  * animation text-focus-in

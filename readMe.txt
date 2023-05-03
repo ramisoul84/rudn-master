@@ -3,6 +3,7 @@ npm i -D react-router-dom
 npm install react-icons --save
 npm install recharts
 npm install elliptic
+npm install crypto-js
 
 
 
