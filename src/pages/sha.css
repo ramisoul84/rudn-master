@@ -24,3 +24,7 @@
   background-color: var(--color-light);
   color: var(--color-dark);
 }
+
+#sha #hash-result {
+  display: none;
+}

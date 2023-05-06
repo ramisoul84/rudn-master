@@ -1,63 +1,74 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { textToUtf8 } from "../algorithms/utf8";
-import { pkcs7 } from "../algorithms/pkcs7";
+import { useState, useEffect } from "react";
 import {
+  aesEncrypt,
   sBox,
   invSBox,
   rCon,
-  aesEncrypt,
   mixMatHex,
   invMixMatHex,
   dot as galoisMultiply,
-} from "../algorithms/aes";
+} from "../algorithms/aes1";
+import { textToUtf8 } from "../algorithms/utf8";
+import { pkcs7 } from "../algorithms/pkcs7";
 import keyExpImg from "../images/keyExpansion.svg";
 import Block from "../components/Block";
 import Word from "../components/Word";
 import Box from "../components/Box";
 import State from "../components/State";
 import "./aes.css";
+
 const AES = () => {
-  // Data entered in Form
-  const [data, setData] = useState({
+  // Object Contain input data from Form
+  const [form, setForm] = useState({
     version: "128",
-    plainText: "",
-    key: "",
+    plainText: null,
+    key: null,
+  });
+  // Object Contain Corrected Data that we will use in Crypto
+  const [data, setData] = useState({
+    plainText: "Welcome to RUDN!",
+    key: "moscow2023#rudn*",
   });
   // number of words in original key
   const [n, setN] = useState(4);
+  //
+
   const {
-    validPlainText,
-    validKey,
     numberOfBlocks,
-    paddedPlainTextHex,
-    paddedKeyHex,
-    cipherTextHexBlocks,
     keyWordsHex,
     keyWordsTableHex,
     keyWordsTable,
     roundKeys,
-    states0,
     states0Hex,
-  } = aesEncrypt(data.plainText, data.key, data.version);
+    state0hexRes,
+    states0,
+    cipherTextBinBlocks,
+    cipherTextHexBlocks,
+    ciphrtHex,
+    ciphrtBase64,
+  } = aesEncrypt(
+    pkcs7(textToUtf8(data.key).encodedTextHex, 16).appendedPlaintextBin,
+    data.key
+  );
   const [result, setResult] = useState({
-    plainText: validPlainText,
-    key: validKey,
     numberOfBlocks: numberOfBlocks,
-    cipherTextHexBlocks: cipherTextHexBlocks,
-    paddedPlainTextHex: paddedPlainTextHex,
-    paddedKeyHex: paddedKeyHex,
     keyWordsHex: keyWordsHex,
     keyWordsTableHex: keyWordsTableHex,
     keyWordsTable: keyWordsTable,
     roundKeys: roundKeys,
     states0Hex: states0Hex,
+    state0hexRes: state0hexRes,
     states0: states0,
+    cipherTextBinBlocks: cipherTextBinBlocks,
+    cipherTextHexBlocks: cipherTextHexBlocks,
+    ciphrtHex: ciphrtHex,
+    ciphrtBase64: ciphrtBase64,
   });
-  // Function that handle each change in form
+  ///////////////////
+
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setData((prev) => {
+    setForm((prev) => {
       return {
         ...prev,
         [name]: value,
@@ -66,48 +77,94 @@ const AES = () => {
     const result = document.getElementById("result");
     result.style.display = "none";
   };
-  // Function that handle the encrypt button
+  const checkData = () => {
+    if (form.version === "128") {
+      setData((prev) => {
+        return {
+          ...prev,
+          key: !form.key
+            ? "moscow2023#rudn*"
+            : form.key.length > 16
+            ? form.key.substring(0, 16)
+            : form.key.padEnd(16, "-"),
+          plainText: !form.plainText ? "Welcome to RUDN!" : form.plainText,
+        };
+      });
+    } else if (form.version === "192") {
+      setData((prev) => {
+        return {
+          ...prev,
+          key: !form.key
+            ? "moscow2023#rudn_ramisoul"
+            : form.key.length > 24
+            ? form.key.substring(0, 24)
+            : form.key.padEnd(24, "-"),
+          plainText: !form.plainText ? "Welcome to RUDN!" : form.plainText,
+        };
+      });
+    } else {
+      setData((prev) => {
+        return {
+          ...prev,
+          key: !form.key
+            ? "moscow2023#rudn_ramisoul?latakia"
+            : form.key.length > 32
+            ? form.key.substring(0, 32)
+            : form.key.padEnd(32, "-"),
+          plainText: !form.plainText ? "Welcome to RUDN!" : form.plainText,
+        };
+      });
+    }
+  };
+  useEffect(checkData, [form]);
+  // Handle Submit
   const handleSubmit = (event) => {
     event.preventDefault();
-    const result = document.getElementById("result");
-    result.style.display = "block";
     const {
-      validPlainText,
-      validKey,
       numberOfBlocks,
-      paddedPlainTextHex,
-      paddedKeyHex,
-      cipherTextHexBlocks,
       keyWordsHex,
       keyWordsTableHex,
       keyWordsTable,
       roundKeys,
       states0Hex,
+      state0hexRes,
       states0,
-    } = aesEncrypt(data.plainText, data.key, data.version);
-    setResult({
-      plainText: validPlainText,
-      key: validKey,
-      numberOfBlocks: numberOfBlocks,
-      cipherTextHexBlocks: cipherTextHexBlocks,
-      paddedPlainTextHex: paddedPlainTextHex,
-      paddedKeyHex: paddedKeyHex,
-      keyWordsHex: keyWordsHex,
-      keyWordsTableHex: keyWordsTableHex,
-      keyWordsTable: keyWordsTable,
-      roundKeys: roundKeys,
-      states0Hex: states0Hex,
-      states0: states0,
+      cipherTextBinBlocks,
+      cipherTextHexBlocks,
+      ciphrtHex,
+      ciphrtBase64,
+    } = aesEncrypt(
+      pkcs7(textToUtf8(data.key).encodedTextHex, 16).appendedPlaintextHex,
+      data.key
+    );
+    setResult((prev) => {
+      return {
+        ...prev,
+        numberOfBlocks: numberOfBlocks,
+        keyWordsHex: keyWordsHex,
+        keyWordsTableHex: keyWordsTableHex,
+        keyWordsTable: keyWordsTable,
+        roundKeys: roundKeys,
+        states0Hex: states0Hex,
+        state0hexRes: state0hexRes,
+        states0: states0,
+        cipherTextBinBlocks: cipherTextBinBlocks,
+        cipherTextHexBlocks: cipherTextHexBlocks,
+        ciphrtHex: ciphrtHex,
+        ciphrtBase64: ciphrtBase64,
+      };
     });
-    setN(data.version === "128" ? 4 : data.version === "192" ? 6 : 8);
+    setN(data.key.length / 4);
+    const result = document.getElementById("result");
+    result.style.display = "block";
   };
-  // Function to Show and Hide main sections
   const toggle = (e) => {
     const el = e.target.className;
     const element = document.getElementById(`${el}`);
     return (element.style.display =
       element.style.display === "block" ? "none" : "block");
   };
+  //
   const [indexRotWord, setIndexRotWord] = useState(3);
   const [indexSubWord, setIndexSubWord] = useState(0);
   const [valueSubWord, setValueSubWord] = useState([null, null]);
@@ -158,11 +215,11 @@ const AES = () => {
           id="key"
           name="key"
           placeholder={
-            data.version === "128"
+            form.version === "128"
               ? "Enter a (128-bit) key - 16 characters"
-              : data.version === "192"
+              : form.version === "192"
               ? "Enter a (192-bit) key - 24 characters"
-              : data.version === "256"
+              : form.version === "256"
               ? "Enter a (256-bit) key - 32 characters"
               : null
           }
@@ -182,93 +239,127 @@ const AES = () => {
       <div id="result">
         <div className="container flex">
           <th className="left">PlainText: </th>
-          <span className="break">{result.plainText}</span>
+          <span className="break">{data.plainText}</span>
           <th className="left">
-            Key: <small>({data.version}-bit)</small>
+            Key: <small>({form.version}-bit)</small>
           </th>
-          <span className="break">{result.key}</span>
+          <span className="break">{data.key}</span>
           <th className="left">
             CipherText: <small>(Hexadecimal)</small>
           </th>
-          <span className="break">{result.cipherTextHexBlocks}</span>
+          <span className="break">{result.ciphrtHex}</span>
           <th className="left">
             CipherText: <small>(Base64)</small>
           </th>
-          <span className="break">{result.plainText}</span>
+          <span className="break">{result.ciphrtHex}</span>
         </div>
-        <h1>
-          And here is the explation how to obtain the cipherText, step by step
-        </h1>
-        <h3 className="aes-format-data" onClick={toggle}>
-          &bull; Formatting Data
-        </h3>
-        <article id="aes-format-data">
+        <strong>
           <p>
-            Prior to encrypting the data using AES, it is necessary to convert
-            both the plaintext and the key into a byte representation. This is
-            commonly achieved by encoding the plaintext and key using the{" "}
-            <strong>UTF-8</strong> character encoding, which maps each character
-            to a sequence of one to four bytes. By encoding the plaintext and
-            key into UTF-8, we can ensure that any international characters are
-            correctly represented in the byte sequence before being encrypted
-            with AES
+            And here is the explanation how we calculate the ciphertext step by
+            step
           </p>
-          <div className="container flex">
-            <th className="left">
-              Encoded PlainText: <small>(UTF-8)</small>
-            </th>
-            <span className="break">
-              {textToUtf8(result.plainText).encodedTextHex}
-            </span>
-            <th className="left">
-              Encoded Key: <small>(UTF-8)</small>
-            </th>
-            <span className="break">
-              {textToUtf8(result.key).encodedTextHex}
-            </span>
-            <Link to={"/rudn-master/utf8"} target="_blanck">
-              utf8
-            </Link>
-          </div>
+        </strong>
+        <p>
+          Prior to encrypting the data using AES, it is necessary to convert
+          both the plaintext and the key into a byte representation. This is
+          commonly achieved by encoding the plaintext and key using the{" "}
+          <strong>UTF-8</strong> character encoding, which maps each character
+          to a sequence of one to four bytes. By encoding the plaintext and key
+          into UTF-8, we can ensure that any international characters are
+          correctly represented in the byte sequence before being encrypted with
+          AES
+        </p>
+        <div className="container flex">
+          <th className="left">
+            Encoded PlainText: <small>(UTF-8)</small>
+          </th>
+          <span className="break">
+            {/*textToUtf8(data.plainText).encodedTextHex*/}
+          </span>
+          <th className="left">
+            Encoded Key: <small>(UTF-8)</small>
+          </th>
+          <span className="break">
+            {/*textToUtf8(data.key).encodedTextHex*/}
+          </span>
+        </div>
+        <p>
+          After that we use <strong>PKCS#7</strong> (Public Key Cryptography
+          Standards #7) , which is a padding scheme that appends bytes to the
+          end of the plaintext message to ensure that its length is a multiple
+          of the (16 Bytes - 128bits). The value of each appended byte is equal
+          to the number of bytes added, in case the plaintext length is already
+          multiple of 16 , the scheme adds an entire new (16 Bytes) block, where
+          each byte equal to 16=(F)<sub>Hex</sub>
+        </p>
+        <div className="container flex">
+          <th className="left">
+            Padded PlainText: <small>(PKCS#7)</small>
+          </th>
+          <span className="break">
+            {/*
+              pkcs7(textToUtf8(data.key).encodedTextHex, 16)
+                .appendedPlaintextHex
+          */}
+          </span>
+        </div>
+        <div className="container flex">
+          <br />
           <p>
-            After that we use <strong>PKCS#7</strong> (Public Key Cryptography
-            Standards #7) , which is a padding scheme that appends bytes to the
-            end of the plaintext message to ensure that its length is a multiple
-            of the (16 Bytes - 128bits). The value of each appended byte is
-            equal to the number of bytes added, in case the plaintext length is
-            already multiple of 16 , the scheme adds an entire new (16 Bytes)
-            block, where each byte equal to 16=(10)<sub>Hex</sub>
+            Padded plaintext contains <span>{result.numberOfBlocks}</span>{" "}
+            (128-bit) block{result.numberOfBlocks > 1 ? "s" : null}
           </p>
-          <div className="container flex">
-            <th className="left">
-              Padded PlainText: <small>(PKCS#7)</small>
-            </th>
-            <span className="break">
-              {
-                pkcs7(textToUtf8(result.plainText).encodedTextHex, 16)
-                  .appendedPlaintextHex
-              }
-            </span>
-          </div>
-          <div className="container flex">
-            <p>
-              Padded plaintext contains <span>{result.numberOfBlocks}</span>{" "}
-              (128-bit) block{result.numberOfBlocks > 1 ? "s" : null}
-            </p>
-            <p>
-              AES is a block cipher algorithm, it takes each (16 byte) and
-              encrypt it separately producing a a (16 byte) block of a cipher
-              text, then concatinating all cipher block to get the final
-              encrypted text
-            </p>
-            <p>Here is how the encryption works with the first block</p>
-            <Block
-              data={result.paddedPlainTextHex.slice(0, 16)}
-              name="First Block"
-            />
-            <Block data={result.paddedKeyHex} name="Key" />
-          </div>
-        </article>
+          <br />
+          <p>
+            Converting the first (128-bit) block of a padded plaintext, and the{" "}
+            <span>({form.version}-bit)</span> key into hexadecimal format:
+          </p>
+          <Block
+            data={data.plainText.substring(0, 16).split("")}
+            name="PlainText-Str"
+          />
+          <Block
+            data={result.appendedPlaintextHex.slice(0, 16)}
+            name="PlainText-Hex"
+          />
+          <hr />
+          <Block data={data.key.split("")} name="Key-Str" />
+          <Block
+            data={data.key.split("").map((e) => {
+              return e
+                .charCodeAt(0)
+                .toString(16)
+                .padStart(2, "0")
+                .toUpperCase();
+            })}
+            name="Key-Hex"
+          />
+          <br />
+          <th>CipherText:</th>
+          <table>
+            <tbody>
+              {result.cipherTextBinBlocks.map((e, i) => {
+                return (
+                  <tr>
+                    <th>Block{i}</th>
+                    {e.map((ee) => {
+                      return (
+                        <span>
+                          {parseInt(ee, 2)
+                            .toString(16)
+                            .padStart(2, "0")
+                            .toUpperCase()}
+                        </span>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p>--</p>
+          {result.ciphrtBase64}
+        </div>
 
         <h3 className="aes-key-exp" onClick={toggle}>
           &bull; Key Expansion
@@ -294,7 +385,7 @@ const AES = () => {
                 <th>N</th>
                 <p>=</p>
                 <td>
-                  <span>{result.key.length / 4}</span>
+                  <span>{n}</span>
                 </td>
               </table>
             </div>
@@ -305,11 +396,9 @@ const AES = () => {
               is the (32-bit) words of the original key.
             </li>
             <div className="container flex">
-              {result.keyWordsHex
-                .slice(0, result.key.length / 4)
-                .map((e, i) => {
-                  return <Word name={`K${i}`} data={e} />;
-                })}
+              {result.keyWordsHex.slice(0, n).map((e, i) => {
+                return <Word name={`K${i}`} data={e} />;
+              })}
             </div>
             <li>
               <strong>RotWord</strong> is a one-byte left circular shift
@@ -429,6 +518,7 @@ const AES = () => {
             <li>
               <strong>&oplus;</strong> is the bitwise XOR operator
             </li>
+
             <div className="container flex center">
               <p style={{ textAlign: "left" }}>
                 <strong>
@@ -602,65 +692,65 @@ const AES = () => {
                   <td>14</td>
                 </tr>
               </table>
-              <li>
-                <strong>
+            </div>
+            <li>
+              <strong>
+                W<sub>i</sub>
+              </strong>{" "}
+              is the i-th word of the key schedule.
+            </li>
+            <div className="container flex">
+              <table>
+                <th>i</th>
+                <th>
+                  W<sub>i-1</sub>
+                </th>
+                <th>RotWord()</th>
+                <th>SubWord()</th>
+                <th>
+                  rcon<sub>(i/N)</sub>
+                </th>
+                <th>
+                  &oplus; rcon<sub>(i/N)</sub>
+                </th>
+                <th>
+                  W<sub>i-N</sub>
+                </th>
+                <th>
                   W<sub>i</sub>
-                </strong>{" "}
-                is the i-th word of the key schedule.
-              </li>
-              <div className="container flex">
-                <table>
-                  <th>i</th>
-                  <th>
-                    W<sub>i-1</sub>
-                  </th>
-                  <th>RotWord()</th>
-                  <th>SubWord()</th>
-                  <th>
-                    rcon<sub>(i/N)</sub>
-                  </th>
-                  <th>
-                    &oplus; rcon<sub>(i/N)</sub>
-                  </th>
-                  <th>
-                    W<sub>i-N</sub>
-                  </th>
-                  <th>
-                    W<sub>i</sub>
-                  </th>
-                  <tbody>
-                    {result.keyWordsTableHex.map((e, i) => {
-                      return (
-                        <tr>
-                          <th>
-                            <strong>{i}</strong>
-                          </th>
-                          {e.map((e1) => {
-                            return (
-                              <td>
-                                {e1
-                                  ? e1.map((e2) => {
-                                      return (
-                                        <p
-                                          style={{
-                                            display: "inline-block",
-                                            width: "25px",
-                                          }}
-                                        >
-                                          <span>{e2}</span>
-                                        </p>
-                                      );
-                                    })
-                                  : null}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                </th>
+                <tbody>
+                  {result.keyWordsTableHex.map((e, i) => {
+                    return (
+                      <tr>
+                        <th>
+                          <strong>{i}</strong>
+                        </th>
+                        {e.map((e1) => {
+                          return (
+                            <td>
+                              {e1
+                                ? e1.map((e2) => {
+                                    return (
+                                      <p
+                                        style={{
+                                          display: "inline-block",
+                                          width: "25px",
+                                        }}
+                                      >
+                                        <span>{e2}</span>
+                                      </p>
+                                    );
+                                  })
+                                : null}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </ul>
           <p> From last chapter we can get all Round Keys as following:</p>
@@ -705,9 +795,9 @@ const AES = () => {
         <article id="aes-encrypt">
           <p>
             This stage involves dividing the plaintext into blocks of fixed
-            size, which is 128 bits (16 bytes) and encrypt them separately. Each
-            block rearranged as a two-dimensional array (Matrix) of four rows
-            and four columns, called the state .
+            size, which is 128 bits (16 bytes). Each block is then arranged as a
+            two-dimensional array (Matrix) of four rows and four columns, called
+            the state .
           </p>
           <div className="container flex center">
             <p style={{ textAlign: "left" }}>
@@ -773,7 +863,7 @@ const AES = () => {
             </p>
             <div className="container flex center">
               <Block
-                data={result.paddedPlainTextHex.slice(0, 16)}
+                data={result.appendedPlaintextHex.slice(0, 16)}
                 name="PlainText"
               />
               <Block data={result.roundKeys[0]} name="RoundKey0" />
@@ -907,7 +997,7 @@ const AES = () => {
             </div>
           </article>
           <h4 onClick={toggle} className="aes-encrypt-rounds">
-            Rounds 1, 2, 3, ...{n + 5}
+            Rounds 1, 2, 3, ...{data.key.length / 4 + 5}
           </h4>
           <article id="aes-encrypt-rounds">
             <p>
@@ -1700,7 +1790,7 @@ const AES = () => {
             </div>
           </article>
           <h4 onClick={toggle} className="aes-encrypt-last">
-            Round {n + 6}
+            Round {data.key.length / 4 + 6}
           </h4>
           <article id="aes-encrypt-last">
             <p>
@@ -1742,18 +1832,37 @@ const AES = () => {
               </p>
               <table>
                 <th>Cipher:</th>
-                {result.cipherTextHexBlocks[0].map((e) => {
+                {result.cipherTextBinBlocks[0].map((e) => {
                   return (
                     <td>
-                      <span>{e}</span>
+                      <span>
+                        {parseInt(e, 2)
+                          .toString(16)
+                          .padStart(2, "0")
+                          .toUpperCase()}
+                      </span>
                     </td>
                   );
                 })}
               </table>
               <p>The full cipher is </p>
               <table>
-                {result.cipherTextHexBlocks.map((e, i) => {
-                  return <span className="break">{e}</span>;
+                {result.cipherTextBinBlocks.map((e, i) => {
+                  return (
+                    <tr>
+                      <th>Block{i}</th>
+                      {e.map((ee) => {
+                        return (
+                          <span>
+                            {parseInt(ee, 2)
+                              .toString(16)
+                              .padStart(2, "0")
+                              .toUpperCase()}
+                          </span>
+                        );
+                      })}
+                    </tr>
+                  );
                 })}
               </table>
             </div>
@@ -1948,7 +2057,7 @@ const AES = () => {
             </ul>
           </article>
           <h4 onClick={toggle} className="aes-decrypt-rounds">
-            Rounds 1, 2, 3, ...{n + 5}
+            Rounds 1, 2, 3, ...{data.key.length / 4 + 5}
           </h4>
           <article id="aes-decrypt-rounds">
             <p>
@@ -2641,7 +2750,108 @@ const AES = () => {
                   </span>
                 </p>
               </div>
+              <li>
+                <strong>InvShiftRows</strong>
+              </li>
+              <div className="container  flex center">
+                <div className="grid3">
+                  <State
+                    data={result.states0Hex[n + 5][2]}
+                    caption="Previous State"
+                    index={[1, 0]}
+                  />
+                  <p style={{ margin: "auto 0" }}>&rArr;</p>
+                  <State
+                    data={result.states0Hex[n + 5][1]}
+                    caption="InvShiftRows"
+                    index={[1, 1]}
+                  />
+                </div>
+              </div>
+              <li>
+                <strong>InvSubBytes</strong>
+              </li>
+              <div className="container  flex center">
+                <div className="grid3">
+                  <State
+                    data={result.states0Hex[n + 5][1]}
+                    caption="Previous State"
+                    index={[1, 0]}
+                  />
+                  <p style={{ margin: "auto 0" }}>&rArr;</p>
+                  <State
+                    data={result.states0Hex[n + 5][0]}
+                    caption="InvSubBytes"
+                    index={[1, 1]}
+                  />
+                </div>
+              </div>
             </ul>
+
+            <p>
+              These four operations are applied in sequence on the state matrix
+              in each intermediate round, except for the final round
+            </p>
+            <div className="container flex">
+              <table>
+                <th>i</th>
+                <th>
+                  State<sub>i-1</sub>
+                </th>
+                <th>
+                  Round Key<sub>{n + 6}-i</sub>
+                </th>
+                <th>AddRoundKey</th>
+                <th>InvMixColumn</th>
+                <th>InvShiftRows</th>
+                <th>InvSubBytes</th>
+                <tbody>
+                  {state0hexRes
+                    .slice(1, n + 6)
+
+                    .map((e, i) => {
+                      return (
+                        <tr>
+                          <th>{i + 1}</th>
+                          {e.reverse().map((ee) => {
+                            return ee ? (
+                              <td
+                                style={{
+                                  border: "none",
+                                  backgroundColor: "transparent",
+                                }}
+                              >
+                                <div>
+                                  {ee.map((e, i) => {
+                                    return (
+                                      <tr className="all-rounds">
+                                        {e.map((e1, j) => {
+                                          return (
+                                            <td>
+                                              <span>{e1}</span>
+                                            </td>
+                                          );
+                                        })}
+                                      </tr>
+                                    );
+                                  })}
+                                </div>
+                              </td>
+                            ) : (
+                              <td
+                                style={{
+                                  border: "none",
+                                  backgroundColor: "transparent",
+                                }}
+                              ></td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
           </article>
           <h4 onClick={toggle} className="aes-decrypt-last">
             Rounds {n + 6}
@@ -2673,13 +2883,13 @@ const AES = () => {
                 state to original form
               </p>
               <Block
-                data={result.paddedPlainTextHex.slice(0, 16)}
+                data={result.appendedPlaintextHex.slice(0, 16)}
                 name="PlainText"
               />
               <hr />
               <p style={{ textAlign: "left" }}>The whole decrypted text is</p>
               <p style={{ textAlign: "left" }}>
-                {result.paddedPlainTextHex.map((e) => {
+                {result.appendedPlaintextHex.map((e) => {
                   return <>{e} </>;
                 })}
               </p>
@@ -2688,18 +2898,20 @@ const AES = () => {
                 text refer to the number of padded bytes to original plainText
               </p>
               <p style={{ textAlign: "left" }}>
-                <strong>{result.paddedPlainTextHex.slice(-1)}</strong> ={" "}
-                <span>{parseInt(result.paddedPlainTextHex.slice(-1), 16)}</span>
+                <strong>{result.appendedPlaintextHex.slice(-1)}</strong> ={" "}
+                <span>
+                  {parseInt(result.appendedPlaintextHex.slice(-1), 16)}
+                </span>
                 &rArr; we remove the last{" "}
-                {parseInt(result.paddedPlainTextHex.slice(-1), 16)} bytes
+                {parseInt(result.appendedPlaintextHex.slice(-1), 16)} bytes
               </p>
               <p style={{ textAlign: "left" }}>
                 The Plain Text in hexadecimal format is{" "}
                 <span>
-                  {result.paddedPlainTextHex
+                  {result.appendedPlaintextHex
                     .slice(
                       0,
-                      -parseInt(result.paddedPlainTextHex.slice(-1), 16)
+                      -parseInt(result.appendedPlaintextHex.slice(-1), 16)
                     )
                     .map((e) => {
                       return <>{e} </>;
@@ -2707,8 +2919,8 @@ const AES = () => {
                 </span>
               </p>
               <p style={{ textAlign: "left" }}>
-                By decoding it from hexadecimal form , to strings using UTF-8 ,
-                the plain text will be
+                By converting it from hexadecimal form , to strings using ASCII
+                table, the plain text will be
               </p>
               <p style={{ textAlign: "left" }}>
                 <span>{data.plainText}</span>

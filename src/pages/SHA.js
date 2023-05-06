@@ -66,19 +66,19 @@ const SHA = () => {
         <p>
           Hash Function <strong>SHA{data.version}</strong>
         </p>
-        <p>
+        <p className="break">
           <strong>Text: </strong>
           {data.text}
         </p>
         <p className="break">
           <strong>Digest: </strong>
           {data.version === "224"
-            ? crypto.SHA224("Hello, world!").toString()
+            ? crypto.SHA224(data.text).toString()
             : data.version === "256"
-            ? crypto.SHA256("Hello, world!").toString()
+            ? crypto.SHA256(data.text).toString()
             : data.version === "384"
-            ? crypto.SHA384("Hello, world!").toString()
-            : crypto.SHA512("Hello, world!").toString()}
+            ? crypto.SHA384(data.text).toString()
+            : crypto.SHA512(data.text).toString()}
         </p>
         <p>
           {/*crypto.AES.encrypt("Welcome to RUDN!000", "moscow2023#rudn*", {

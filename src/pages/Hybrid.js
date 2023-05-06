@@ -105,7 +105,7 @@ const Hybrid = () => {
             </li>
             <p className="break">
               <strong>X-Coordinate</strong>{" "}
-              {usedCurve.g.getX().toString(10).toUpperCase()}
+              {usedCurve.g.getX().toString(16).toUpperCase()}
             </p>
             <p className="break">
               <strong>Y-Coordinate</strong>{" "}

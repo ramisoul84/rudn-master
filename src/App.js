@@ -3,10 +3,12 @@ import Root from "./components/Root";
 import Error from "./pages/Error";
 import Intro from "./pages/Intro";
 import Home from "./pages/Home";
+import Kuz from "./pages/Kuz";
 import AES from "./pages/AES";
 import ECC from "./pages/ECC";
 import SHA from "./pages/SHA";
 import Hybrid from "./pages/Hybrid";
+import UTF8 from "./pages/UTF8";
 const router = createBrowserRouter([
   {
     path: "/rudn-master",
@@ -20,6 +22,10 @@ const router = createBrowserRouter([
       {
         path: "/rudn-master/home",
         element: <Home />,
+      },
+      {
+        path: "/rudn-master/kuz",
+        element: <Kuz />,
       },
       {
         path: "/rudn-master/aes",
@@ -36,6 +42,10 @@ const router = createBrowserRouter([
       {
         path: "/rudn-master/hybrid",
         element: <Hybrid />,
+      },
+      {
+        path: "/rudn-master/utf8",
+        element: <UTF8 />,
       },
     ],
   },

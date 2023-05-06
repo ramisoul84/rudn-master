@@ -8,6 +8,10 @@ const data = [
     link: "/rudn-master/home",
   },
   {
+    title: "Kuznyechik ",
+    link: "/rudn-master/kuz",
+  },
+  {
     title: "AES",
     link: "/rudn-master/aes",
   },

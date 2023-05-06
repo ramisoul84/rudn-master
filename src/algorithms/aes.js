@@ -1,3 +1,4 @@
+import { validation } from "./validation";
 // Rijndael (S-box)
 const sBox = [
   [
@@ -157,57 +158,69 @@ const invMixMatHex = [
   [0x0d, 0x09, 0x0e, 0x0b],
   [0x0b, 0x0d, 0x09, 0x0e],
 ];
-
-// Main Method to Encrypt the plainText
-const aesEncrypt = (plainText, key) => {
-  const appendedPlaintextHex = padPKCS7(plainText).appendedPlaintextHex;
-  const appendedPlaintextBin = padPKCS7(plainText).appendedPlaintextBin;
-  const numberOfBlocks = appendedPlaintextHex.length / 16;
-  const keyWordsHex = keyExpansion(key).keyWordsHex;
-  const keyWordsTableHex = keyExpansion(key).keyWordsTableHex;
-  const keyWordsTable = keyExpansion(key).keyWordsTable;
-  const roundKeysBin = keyExpansion(key).roundKeysBin;
-  const roundKeys = keyExpansion(key).roundKeys;
-  const states0 = aesEncryptBlock(
-    appendedPlaintextBin.slice(0, 16),
-    key
-  ).states;
-  const states0Hex = aesEncryptBlock(
-    appendedPlaintextBin.slice(0, 16),
-    key
-  ).statesHex;
+// Main Method to AES encrypt a text of any size plainText(str),Key(str)
+const aesEncrypt = (plainText, key, aesVersion) => {
+  const validPlainText = validation(plainText, key, aesVersion).validPlainText;
+  const validKey = validation(plainText, key, aesVersion).validKey;
+  const paddedPlainTextBin = validation(
+    plainText,
+    key,
+    aesVersion
+  ).paddedPlainTextBin;
+  const paddedPlainTextHex = validation(
+    plainText,
+    key,
+    aesVersion
+  ).paddedPlainTextHex;
+  const paddedKeyHex = validation(plainText, key, aesVersion).paddedKeyHex;
+  const paddedKeyBin = validation(plainText, key, aesVersion).paddedKeyBin;
+  const numberOfBlocks = paddedPlainTextBin.length / 16;
   const cipherTextBinBlocks = [];
   for (let i = 0; i < numberOfBlocks; i++) {
     cipherTextBinBlocks.push(
-      aesEncryptBlock(appendedPlaintextBin.slice(i * 16, i * 16 + 16), key)
-        .cipher
+      aesEncryptBlock(
+        paddedPlainTextBin.slice(i * 16, i * 16 + 16),
+        paddedKeyBin
+      ).cipherBin
     );
   }
   const cipherTextHexBlocks = cipherTextBinBlocks.map((e) => {
     return e.map((ee) => {
-      return parseInt(ee, 2).toString(16).padStart(2, "0").toUpperCase();
+      return parseInt(ee, 2).toString(16).padStart(2, "0");
     });
   });
-  const ciphrtHex = cipherTextHexBlocks.flat();
-  const state0hexRes = states0Hex.slice();
-  state0hexRes.reverse();
+  const keyWordsHex = keyExpansion(paddedKeyBin).keyWordsHex;
+  const roundKeys = keyExpansion(paddedKeyBin).roundKeys;
+  const keyWordsTableHex = keyExpansion(paddedKeyBin).keyWordsTableHex;
+  const keyWordsTable = keyExpansion(paddedKeyBin).keyWordsTable;
+  console.log("cipherTextBinBlocks", keyWordsTableHex);
+  const states0 = aesEncryptBlock(
+    paddedPlainTextBin.slice(0, 16),
+    paddedKeyBin
+  ).states;
+  const states0Hex = aesEncryptBlock(
+    paddedPlainTextBin.slice(0, 16),
+    paddedKeyBin
+  ).statesHex;
   return {
+    validPlainText,
+    validKey,
     numberOfBlocks,
-    appendedPlaintextHex,
+    paddedPlainTextHex,
+    paddedKeyHex,
+    cipherTextHexBlocks,
     keyWordsHex,
     keyWordsTableHex,
     keyWordsTable,
     roundKeys,
     states0,
     states0Hex,
-    state0hexRes,
-    cipherTextBinBlocks,
-    ciphrtHex,
   };
 };
-const aesEncryptBlock = (plaintextBlockBin, key) => {
-  const Nr = key.length / 4 + 6; // Number of Rounds
-  const roundKeysBin = keyExpansion(key).roundKeysBin;
+// a method to encrypt one block , argument Array of bytes in binary format
+const aesEncryptBlock = (plaintextBlockBin, paddedKeyBin) => {
+  const Nr = paddedKeyBin.length / 4 + 6; // Number of Rounds
+  const roundKeysBin = keyExpansion(paddedKeyBin).roundKeysBin;
   const states = [];
   states[0] = [];
   states[0].push(vectorToState(plaintextBlockBin));
@@ -253,321 +266,19 @@ const aesEncryptBlock = (plaintextBlockBin, key) => {
         : null;
     });
   });
-  const cipher = stateToVector(states[Nr][5]);
-
-  return { states, statesHex, cipher };
+  const cipherBin = stateToVector(states[Nr][5]);
+  return { cipherBin, states, statesHex };
 };
-//////////////////////////////////////
-//  cipherText in hexa
-/*
-const aesDecrypt = (cipherText, key) => {
-  const numberOfBlocks = cipherText.length / 16;
-  for (let i = 0; i < numberOfBlocks; i++) {
-    aesDecryptBlock(cipherText.slice(i * 16, i * 16 + 16), key);
-  }
-  const statesDec0Hex = aesDecryptBlock(
-    cipherText.slice(0, 16),
-    key
-  ).statesDecHex;
-
-  return { statesDec0Hex };
-};
-
-const aesDecryptBlock = (ciphertextBlockHex, key) => {
-  const ciphertextBlockBin = ciphertextBlockHex.map((e) => {
-    return parseInt(e, 16).toString(2).padStart(8, "0");
-  });
-  const Nr = key.length / 4 + 6; // Number of Rounds
-  const roundKeysBin = keyExpansion(key).roundKeysBin;
-  const statesDec = [];
-  statesDec[0] = [];
-  statesDec[0].push(vectorToState(ciphertextBlockBin));
-  statesDec[0].push(null);
-  statesDec[0].push(null);
-  statesDec[0].push(null);
-  statesDec[0].push(vectorToState(roundKeysBin[Nr]));
-  statesDec[0].push(xorStates(statesDec[0][0], statesDec[0][4]));
-
-  for (let i = 1; i < Nr; i++) {
-    statesDec[i] = [];
-    statesDec[i].push(statesDec[0][5]); //i-1
-    statesDec[i].push(invShiftRows(statesDec[0][5]));
-    statesDec[i].push(invSubBytes(invShiftRows(statesDec[0][5])));
-    statesDec[i].push(statesDec[0][5]); // delet
-    //statesDec[i].push(
-    // invMixColumns(invSubBytes(invShiftRows(statesDec[0][5])))
-    //);
-    statesDec[i].push(vectorToState(roundKeysBin[Nr - i]));
-    statesDec[i].push(xorStates(statesDec[0][0], statesDec[0][4]));
-    //add round
-  }
-
-  statesDec[Nr] = [];
-  statesDec[Nr].push(statesDec[Nr - 1][5]);
-  statesDec[Nr].push(subBytes(statesDec[Nr - 1][5]));
-  statesDec[Nr].push(shiftRows(subBytes(statesDec[Nr - 1][5])));
-  statesDec[Nr].push(null);
-  statesDec[Nr].push(vectorToState(roundKeysBin[Nr]));
-  statesDec[Nr].push(
-    xorStates(
-      shiftRows(subBytes(statesDec[Nr - 1][5])),
-      vectorToState(roundKeysBin[Nr])
-    )
-  );
-  const statesDecHex = statesDec.map((e) => {
-    return e.map((ee) => {
-      return ee
-        ? ee.map((eee) => {
-            return eee
-              ? eee.map((eeee) => {
-                  return parseInt(eeee, 2)
-                    .toString(16)
-                    .padStart(2, "0")
-                    .toUpperCase();
-                })
-              : null;
-          })
-        : null;
-    });
-  });
-  const plainText = stateToVector(statesDec[Nr][5]);
-  return { statesDecHex, plainText };
-};
-*/
-//////////////////////////
-//// Convert a 128-bits binary vector to Matrix 4*4 (binary)
-const vectorToState = (vec) => {
-  let state = [];
-  for (let i = 0; i < 4; i++) {
-    state[i] = [];
-    for (let j = 0; j < 4; j++) {
-      state[i].push(vec[j * 4 + i]);
-    }
-  }
-  return state;
-};
-const stateToVector = (state) => {
-  let vec = [];
-  for (let i = 0; i < 4; i++) {
-    for (let j = 0; j < 4; j++) {
-      vec.push(state[j][i]);
-    }
-  }
-  return vec;
-};
-// XORing bytes (cells) of two (4x4) States
-const xorStates = (stateA, stateB) => {
-  let newState = [];
-  for (let i = 0; i < 4; i++) {
-    newState[i] = [];
-    for (let j = 0; j < 4; j++) {
-      newState[i][j] = xor(stateA[i][j], stateB[i][j]);
-    }
-  }
-  return newState;
-};
-/////
-//substitute each  (byte) of  state matrix by corresponding byte in AES S-Box
-const subBytes = (state) => {
-  let newState = [];
-  for (let i = 0; i < 4; i++) {
-    newState[i] = [];
-    for (let j = 0; j < 4; j++) {
-      newState[i][j] = subByte(state[i][j]);
-    }
-  }
-  return newState;
-};
-const invSubBytes = (state) => {
-  let newState = [];
-  for (let i = 0; i < 4; i++) {
-    newState[i] = [];
-    for (let j = 0; j < 4; j++) {
-      newState[i][j] = invSubByte(state[i][j]);
-    }
-  }
-  return newState;
-};
-// ShiftRows in Matrix
-const shiftRows = (state) => {
-  let newState = [];
-  newState.push(state[0]);
-  newState.push(rotWord(state[1]));
-  newState.push(rotWord(rotWord(state[2])));
-  newState.push(rotWord(rotWord(rotWord(state[3]))));
-  return newState;
-};
-//
-const invShiftRows = (state) => {
-  let newState = [];
-  newState.push(state[0]);
-  newState.push(invRotWord(state[1]));
-  newState.push(invRotWord(invRotWord(state[2])));
-  newState.push(invRotWord(invRotWord(invRotWord(state[3]))));
-  return newState;
-};
-//  Muliplication {a}•{bin} in GF(2^8)
-function dot(a1, b1) {
-  let a = parseInt(a1, 2);
-  let b = parseInt(b1, 2);
-  let p = 0;
-  for (let i = 0; i < 8; i++) {
-    if ((b & 1) === 1) p ^= a;
-    const highBit = a & 0x80;
-    a <<= 1;
-    if (highBit === 0x80) a ^= 0x1b;
-    b >>= 1;
-  }
-  return p.toString(2).padStart(8, "0").slice(-8);
-}
-// MixColumns
-const mixColumns = (state) => {
-  const mixMat = mixMatHex.map((e) => {
-    return e.map((ee) => {
-      return parseInt(ee, 16).toString(2).padStart(8, "0");
-    });
-  });
-  const newState = [];
-  for (let i = 0; i < 4; i++) {
-    newState[i] = [];
-    for (let j = 0; j < 4; j++) {
-      newState[i][j] = xor(
-        xor(dot(mixMat[i][0], state[0][j]), dot(mixMat[i][1], state[1][j])),
-        xor(dot(mixMat[i][2], state[2][j]), dot(mixMat[i][3], state[3][j]))
-      );
-    }
-  }
-  return newState;
-};
-const invMixColumns = (B) => {
-  const A = [
-    [2, 3, 1, 1],
-    [1, 2, 3, 1],
-    [1, 1, 2, 3],
-    [3, 1, 1, 2],
-  ];
-  const C = [];
-
-  for (let i = 0; i < 4; i++) {
-    C[i] = [];
-    for (let j = 0; j < 4; j++) {
-      C[i][j] = xor(
-        xor(dot(A[i][0], B[0][j]), dot(A[i][1], B[1][j])),
-        xor(dot(A[i][2], B[2][j]), dot(A[i][3], B[3][j]))
-      );
-    }
-  }
-
-  return C;
-};
-//
-
-// method appends bytes to the end of the plaintext message
-// to ensure that its length is a multiple of the 16 (block size) and covert
-// appended plaintext to array of hexadecimal and binary
-function padPKCS7(plaintext) {
-  const paddingLength = 16 - (plaintext.length % 16);
-  const appendedPlaintextHex = Array(plaintext.length + paddingLength);
-  const appendedPlaintextBin = Array(plaintext.length + paddingLength);
-  const paddingValue = paddingLength
-    .toString(16)
-    .padStart(2, "0")
-    .toUpperCase();
-  plaintext.split("").map((e, i) => {
-    return (appendedPlaintextHex[i] = e
-      .charCodeAt(0)
-      .toString(16)
-      .padStart(2, "0")
-      .toUpperCase());
-  });
-  for (let i = plaintext.length; i < plaintext.length + paddingLength; i++) {
-    appendedPlaintextHex[i] = paddingValue;
-  }
-  appendedPlaintextHex.map((e, i) => {
-    return (appendedPlaintextBin[i] = parseInt(e, 16)
-      .toString(2)
-      .padStart(8, "0"));
-  });
-  // padPKCS7(Welcome).appendedPlaintextHex -> ['57', '65', '6C', '63','6F', '6D', '65', '09','09', '09', '09', '09','09', '09', '09', '09']
-  // padPKCS7(Welcome).appendedPlaintextBin -> ['01010111', '01100101',...............]
-
-  return { appendedPlaintextHex, appendedPlaintextBin };
-}
-
-////
-
-// a method rotates the bytes in the word to the left by one position.
-const rotWord = (word) => {
-  let newWord = Array(4);
-  for (let i = 1; i < 4; i++) {
-    newWord[i - 1] = word[i];
-  }
-  newWord[3] = word[0];
-  return newWord;
-};
-//
-const invRotWord = (word) => {
-  let newWord = Array(4);
-  newWord[0] = word[3];
-  for (let i = 1; i < 4; i++) {
-    newWord[i] = word[i - 1];
-  }
-  return newWord;
-};
-// XORing two Binary numbers bin1,bin2 : (same length)
-const xor = (bin1, bin2) => {
-  let res = "";
-  for (let i = 0; i < bin1.length; i++) {
-    if (bin1[i] === bin2[i]) {
-      res += "0";
-    } else {
-      res += "1";
-    }
-  }
-  return res;
-};
-// XORing two words
-const xorWord = (word1, word2) => {
-  let newWord = [];
-  for (let i = 0; i < 4; i++) {
-    newWord[i] = xor(word1[i], word2[i]);
-  }
-  return newWord;
-};
-// Substitution a byte (S-Box):
-const subByte = (byte) => {
-  const l = parseInt(byte.substring(0, 4), 2);
-  const r = parseInt(byte.substring(4, 8), 2);
-  return sBox[l][r].toString(2).padStart(8, "0");
-};
-const invSubByte = (byte) => {
-  const l = parseInt(byte.substring(0, 4), 2);
-  const r = parseInt(byte.substring(4, 8), 2);
-  return invSBox[l][r].toString(2).padStart(8, "0");
-};
-// Substitution each byte in word (S-Box):
-const subWord = (word) => {
-  let newWord = [];
-  for (let i = 0; i < 4; i++) {
-    newWord[i] = subByte(word[i]);
-  }
-  return newWord;
-};
-
-const keyExpansion = (key) => {
-  const N = key.length / 4; // Number of words (32-bit) in original key
+// Key Expansion methods to create key rounds
+const keyExpansion = (paddedKeyBin) => {
+  const N = paddedKeyBin.length / 4; // Number of words (32-bit) in original key
+  console.log("N=", N);
   const K = Array(N); // Words of the original key in  binary
   for (let i = 0; i < N; i++) {
-    K[i] = Array(4);
-    for (let j = 0; j < 4; j++) {
-      K[i][j] = key
-        .charCodeAt(j + i * 4)
-        .toString(2)
-        .padStart(8, "0");
-    }
+    K[i] = paddedKeyBin.slice(i * 4, i * 4 + 4);
   }
   // the number of expanded word
-  const numWords = 4 * (key.length / 4 + 6 + 1);
+  const numWords = 4 * (paddedKeyBin.length / 4 + 6 + 1);
   // key Words in Binary format
   const keyWordsBin = Array(numWords);
   for (let i = 0; i < numWords; i++) {
@@ -589,6 +300,7 @@ const keyExpansion = (key) => {
       keyWordsBin[i] = xorWord(keyWordsBin[i - N], keyWordsBin[i - 1]);
     }
   }
+
   // key Words in Hexadecimal format
   const keyWordsHex = Array(numWords);
   keyWordsBin.map((e, i) => {
@@ -600,6 +312,14 @@ const keyExpansion = (key) => {
         .toUpperCase();
     });
   });
+  const roundKeysBin = Array(paddedKeyBin.length / 4 + 7);
+  for (let i = 0; i <= paddedKeyBin.length / 4 + 6; i++) {
+    roundKeysBin[i] = keyWordsBin.slice(i * 4, i * 4 + 4).flat();
+  }
+  const roundKeys = Array(paddedKeyBin.length / 4 + 7);
+  for (let i = 0; i <= paddedKeyBin.length / 4 + 6; i++) {
+    roundKeys[i] = keyWordsHex.slice(i * 4, i * 4 + 4).flat();
+  }
   // Create a table that print all opertations step by step
   const keyWordsTable = [];
   for (let i = 0; i < N; i++) {
@@ -655,35 +375,145 @@ const keyExpansion = (key) => {
       );
     });
   });
-  const roundKeys = Array(key.length / 4 + 7);
-  for (let i = 0; i <= key.length / 4 + 6; i++) {
-    roundKeys[i] = keyWordsHex.slice(i * 4, i * 4 + 4).flat();
-  }
-  const roundKeysBin = Array(key.length / 4 + 7);
-  for (let i = 0; i <= key.length / 4 + 6; i++) {
-    roundKeysBin[i] = keyWordsBin.slice(i * 4, i * 4 + 4).flat();
-  }
+
   return {
-    keyWordsBin,
-    keyWordsHex,
-    keyWordsTable,
-    keyWordsTableHex,
-    roundKeys,
     roundKeysBin,
+    keyWordsHex,
+    keyWordsTableHex,
+    keyWordsTable,
+    roundKeys,
   };
 };
-
-export {
-  aesEncrypt,
-  mixColumns,
-  dot,
-  mixMatHex,
-  invMixMatHex,
-  sBox,
-  invSBox,
-  rCon,
+/*------------------------------------------------------------
+------------------- auxiliaries functions --------------------
+------------------------------------------------------------*/
+// XORing two Binary numbers bin1,bin2 : (same length)
+const xor = (bin1, bin2) => {
+  let res = "";
+  for (let i = 0; i < bin1.length; i++) {
+    if (bin1[i] === bin2[i]) {
+      res += "0";
+    } else {
+      res += "1";
+    }
+  }
+  return res;
 };
-const plaintext = "Welcome to Rudn!";
-const key = "moscow2023#rudn*";
-
-aesEncrypt(plaintext, key);
+// XORing two words (4 bytes )
+const xorWord = (word1, word2) => {
+  let newWord = [];
+  for (let i = 0; i < 4; i++) {
+    newWord[i] = xor(word1[i], word2[i]);
+  }
+  return newWord;
+};
+// XORing bytes (cells) of two (4x4) States
+const xorStates = (stateA, stateB) => {
+  let newState = [];
+  for (let i = 0; i < 4; i++) {
+    newState[i] = [];
+    for (let j = 0; j < 4; j++) {
+      newState[i][j] = xor(stateA[i][j], stateB[i][j]);
+    }
+  }
+  return newState;
+};
+// Substitution a byte (S-Box):
+const subByte = (byte) => {
+  const l = parseInt(byte.substring(0, 4), 2);
+  const r = parseInt(byte.substring(4, 8), 2);
+  return sBox[l][r].toString(2).padStart(8, "0");
+};
+// Substitution each byte in word (S-Box):
+const subWord = (word) => {
+  let newWord = [];
+  for (let i = 0; i < 4; i++) {
+    newWord[i] = subByte(word[i]);
+  }
+  return newWord;
+};
+//substitute each  (byte) of  state matrix by corresponding byte in AES S-Box
+const subBytes = (state) => {
+  let newState = [];
+  for (let i = 0; i < 4; i++) {
+    newState[i] = [];
+    for (let j = 0; j < 4; j++) {
+      newState[i][j] = subByte(state[i][j]);
+    }
+  }
+  return newState;
+};
+// a method rotates the bytes in the word to the left by one position.
+const rotWord = (word) => {
+  let newWord = Array(4);
+  for (let i = 1; i < 4; i++) {
+    newWord[i - 1] = word[i];
+  }
+  newWord[3] = word[0];
+  return newWord;
+};
+// ShiftRows in Matrix (second row 1 byte to left, third -> 2 , fourth ->4)
+const shiftRows = (state) => {
+  let newState = [];
+  newState.push(state[0]);
+  newState.push(rotWord(state[1]));
+  newState.push(rotWord(rotWord(state[2])));
+  newState.push(rotWord(rotWord(rotWord(state[3]))));
+  return newState;
+};
+//  Muliplication {a}•{bin} in GF(2^8)
+function dot(a1, b1) {
+  let a = parseInt(a1, 2);
+  let b = parseInt(b1, 2);
+  let p = 0;
+  for (let i = 0; i < 8; i++) {
+    if ((b & 1) === 1) p ^= a;
+    const highBit = a & 0x80;
+    a <<= 1;
+    if (highBit === 0x80) a ^= 0x1b;
+    b >>= 1;
+  }
+  return p.toString(2).padStart(8, "0").slice(-8);
+}
+// MixColumns
+const mixColumns = (state) => {
+  const mixMat = mixMatHex.map((e) => {
+    return e.map((ee) => {
+      return parseInt(ee, 16).toString(2).padStart(8, "0");
+    });
+  });
+  const newState = [];
+  for (let i = 0; i < 4; i++) {
+    newState[i] = [];
+    for (let j = 0; j < 4; j++) {
+      newState[i][j] = xor(
+        xor(dot(mixMat[i][0], state[0][j]), dot(mixMat[i][1], state[1][j])),
+        xor(dot(mixMat[i][2], state[2][j]), dot(mixMat[i][3], state[3][j]))
+      );
+    }
+  }
+  return newState;
+};
+// Convert a 128-bits binary vector to Matrix 4*4 (binary)
+const vectorToState = (vec) => {
+  let state = [];
+  for (let i = 0; i < 4; i++) {
+    state[i] = [];
+    for (let j = 0; j < 4; j++) {
+      state[i].push(vec[j * 4 + i]);
+    }
+  }
+  return state;
+};
+// Convert a vector (1D array) to Matrix 2D array
+const stateToVector = (state) => {
+  let vec = [];
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      vec.push(state[j][i]);
+    }
+  }
+  return vec;
+};
+//stateToVector([[1,2,3,4],[5,6,7,8],[..],[..]]) -> [1,2,3,4,5,6,7,8,9...]
+export { sBox, invSBox, rCon, mixMatHex, invMixMatHex, dot, aesEncrypt };
