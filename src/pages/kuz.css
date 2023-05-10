@@ -1,0 +1,99 @@
+#kuz form {
+  padding: 10px;
+}
+#kuz legend {
+  margin-left: 25px;
+  padding: 5px;
+  font-size: 20px;
+  font-weight: 800;
+}
+#kuz fieldset {
+  border-radius: 10px;
+  border: 2px solid var(--color-dark);
+}
+#kuz form textarea {
+  padding: 4px;
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  resize: none;
+}
+#kuz button {
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  background-color: var(--color-dark);
+  color: var(--color-light);
+  font-size: 18px;
+  font-weight: 400;
+}
+#kuz button:hover {
+  cursor: pointer;
+  background-color: var(--color-light);
+  color: var(--color-dark);
+}
+#kuz button:disabled {
+  background-color: gray;
+  color: var(--color-dark);
+}
+#kuz form input[type="submit"] {
+  margin-top: 10px;
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  background-color: var(--color-dark);
+  color: var(--color-light);
+  font-size: 22px;
+  font-weight: 800;
+}
+#kuz form input[type="submit"]:hover {
+  cursor: pointer;
+  background-color: var(--color-light);
+  color: var(--color-dark);
+}
+#kuz form input[type="submit"]:disabled {
+  background-color: gray;
+  color: var(--color-dark);
+}
+#kuz form input[type="submit"]:disabled:hover {
+  background-color: gray;
+  cursor: auto;
+}
+#kuz .grid-cbc {
+  display: grid;
+  grid-template-columns: 5fr 1fr;
+  gap: 5px;
+}
+#kuz small {
+  font-size: 10px;
+}
+#kuz span {
+  font-size: 20px;
+  color: red;
+  font-weight: 400;
+}
+
+#kuz input:invalid {
+  background-color: #fdc8bf;
+}
+#kuz input:valid {
+  background-color: #aff5ac;
+}
+#kuz textarea:invalid {
+  background-color: rgb(253, 200, 191);
+}
+#kuz textarea:valid {
+  background-color: rgb(175, 245, 172);
+}
+
+#kuz .plainText-hex {
+  font-size: 14px;
+}
+#kuz #kuz-res {
+  display: none;
+}
+
+#kuz .pointer {
+  cursor: pointer;
+}
+#kuz .pointer:hover {
+  color: var(--color-dark);
+  background-color: var(--color-light);
+}

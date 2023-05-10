@@ -21,6 +21,8 @@ const AES = () => {
   // Data entered in Form
   const [data, setData] = useState({
     version: "128",
+    mode: "ecb",
+    iv: "",
     plainText: "",
     key: "",
   });
@@ -108,6 +110,15 @@ const AES = () => {
     return (element.style.display =
       element.style.display === "block" ? "none" : "block");
   };
+  const generateIV = (event) => {
+    event.preventDefault();
+    setData((prev) => {
+      return {
+        ...prev,
+        iv: "ABABBBBABBABABA",
+      };
+    });
+  };
   const [indexRotWord, setIndexRotWord] = useState(3);
   const [indexSubWord, setIndexSubWord] = useState(0);
   const [valueSubWord, setValueSubWord] = useState([null, null]);
@@ -152,6 +163,11 @@ const AES = () => {
           <option value="192">AES-192</option>
           <option value="256">AES-256</option>
         </select>
+        <label htmlFor="version">AES-Mode:</label>
+        <select id="mode" name="mode" onChange={handleChange} required>
+          <option value="ecb">Electronic Code Book - ECB</option>
+          <option value="cbc">Cipher Block Chaining - CBC</option>
+        </select>
         <label htmlFor="key">Key:</label>
         <input
           type="text"
@@ -169,6 +185,26 @@ const AES = () => {
           onChange={handleChange}
           autoComplete="off"
         />
+        {data.mode === "cbc" ? (
+          <>
+            <label htmlFor="iv">
+              Initialization vector (IV):<small>(Hexadecimal)</small>
+            </label>
+            <div className="flex grid-cbc">
+              <input
+                type="text"
+                id="iv"
+                name="iv"
+                placeholder={
+                  !data.iv ? "Enter a 16 Bytes IV or Generate it" : data.iv
+                }
+                onChange={handleChange}
+                autoComplete="off"
+              />
+              <button onClick={generateIV}>Generate an IV</button>
+            </div>
+          </>
+        ) : null}
         <label htmlFor="plaintext">Plain Text:</label>
         <textarea
           type="text"

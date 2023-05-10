@@ -55,4 +55,4 @@ const textToUtf8 = (text) => {
 };
 // textToUtf8("Hello").encodedTextHex ---> "48656c6c6f"
 // textToUtf8("Hello").encodedTextBin ---> "0100100001100101011011000110110001101111"
-export { textToUtf8 };
+export { textToUtf8, charToUtf8 };

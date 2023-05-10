@@ -2,6 +2,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Bungee&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Courgette&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Coda:wght@400;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Rokkitt:ital,wght@0,100;0,300;0,400;0,800;1,200&display=swap");
 
 :root {
   --color-dark: #1f1f38;
@@ -115,7 +116,9 @@ caption {
 span {
   color: #2596be;
   padding: 0 2px;
-  font-weight: 800;
+  font-weight: 400;
+  font-size: 20px;
+  font-family: "Rokkitt";
 }
 small {
   font-size: 12px;
@@ -270,6 +273,38 @@ small {
 }
 .pad5 {
   padding: 0 10px;
+}
+#utf8 form {
+  padding: 10px;
+}
+#utf8 form input[type="submit"] {
+  margin-top: 10px;
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  background-color: var(--color-dark);
+  color: var(--color-light);
+  font-size: 25px;
+  font-weight: 800;
+}
+
+#utf8 form input[type="submit"]:disabled {
+  background-color: gray;
+  color: var(--color-dark);
+}
+#utf8 form input[type="submit"]:disabled:hover {
+  background-color: gray;
+  color: var(--color-dark);
+}
+#utf8 form input[type="submit"]:hover {
+  cursor: pointer;
+  background-color: var(--color-light);
+  color: var(--color-dark);
+}
+#utf8 textarea {
+  padding: 4px;
+  border: 1px solid var(--color-dark);
+  border-radius: 5px;
+  resize: none;
 }
 /**
  * ----------------------------------------

@@ -21,7 +21,7 @@ const Header = () => {
         <GiHamburgerMenu onClick={handleMenu} className="icon" />
       )}
 
-      <h3>HYBRID CRYPTOGRAPHY</h3>
+      <h3>HYBRID ENCRYPTION</h3>
       <BsGithub className="icon right" />
     </header>
   );

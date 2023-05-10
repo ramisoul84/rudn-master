@@ -20,12 +20,20 @@ const data = [
     link: "/rudn-master/ecc",
   },
   {
-    title: "SHA",
-    link: "/rudn-master/sha",
+    title: "Hybrid Encryption",
+    link: "/rudn-master/hybrid",
   },
   {
-    title: "Hybrid Crypto",
-    link: "/rudn-master/hybrid",
+    title: "UTF-8 Encode",
+    link: "/rudn-master/utf8",
+  },
+  {
+    title: "Base64 Encode",
+    link: "/rudn-master/base64",
+  },
+  {
+    title: "PCSK#7 Padding Scheme",
+    link: "/rudn-master/pcsk",
   },
 ];
 
@@ -42,12 +50,27 @@ const Aside = () => {
       <h3>Get Start</h3>
       {data.map((e, i) => {
         return (
-          <List
-            title={e.title}
-            link={e.link}
-            active={active[i]}
-            onClick={() => handleClick(i)}
-          />
+          <>
+            {i === 4 ? (
+              <>
+                <List
+                  title={e.title}
+                  link={e.link}
+                  active={active[i]}
+                  onClick={() => handleClick(i)}
+                />
+                <h3>Auxiliary methods</h3>
+              </>
+            ) : (
+              <List
+                title={e.title}
+                link={e.link}
+                active={active[i]}
+                onClick={() => handleClick(i)}
+                small={i > 4 ? true : false}
+              />
+            )}
+          </>
         );
       })}
     </aside>
