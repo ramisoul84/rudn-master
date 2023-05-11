@@ -7,10 +7,79 @@ import {
   linearTransformation,
   keyExpansion,
   encryptBlock,
+  encrypt,
+  toBlocks,
 } from "../algorithms/kuzz";
 import KuzConst from "../components/KuzConst";
 import Ploynomial from "../components/Polynomial";
+import Box from "../components/Box";
 import "./kuz.css";
+const Pi = [
+  [
+    0xfc, 0xee, 0xdd, 0x11, 0xcf, 0x6e, 0x31, 0x16, 0xfb, 0xc4, 0xfa, 0xda,
+    0x23, 0xc5, 0x04, 0x4d,
+  ],
+  [
+    0xe9, 0x77, 0xf0, 0xdb, 0x93, 0x2e, 0x99, 0xba, 0x17, 0x36, 0xf1, 0xbb,
+    0x14, 0xcd, 0x5f, 0xc1,
+  ],
+  [
+    0xf9, 0x18, 0x65, 0x5a, 0xe2, 0x5c, 0xef, 0x21, 0x81, 0x1c, 0x3c, 0x42,
+    0x8b, 0x01, 0x8e, 0x4f,
+  ],
+  [
+    0x05, 0x84, 0x02, 0xae, 0xe3, 0x6a, 0x8f, 0xa0, 0x06, 0x0b, 0xed, 0x98,
+    0x7f, 0xd4, 0xd3, 0x1f,
+  ],
+  [
+    0xeb, 0x34, 0x2c, 0x51, 0xea, 0xc8, 0x48, 0xab, 0xf2, 0x2a, 0x68, 0xa2,
+    0xfd, 0x3a, 0xce, 0xcc,
+  ],
+  [
+    0xb5, 0x70, 0x0e, 0x56, 0x08, 0x0c, 0x76, 0x12, 0xbf, 0x72, 0x13, 0x47,
+    0x9c, 0xb7, 0x5d, 0x87,
+  ],
+  [
+    0x15, 0xa1, 0x96, 0x29, 0x10, 0x7b, 0x9a, 0xc7, 0xf3, 0x91, 0x78, 0x6f,
+    0x9d, 0x9e, 0xb2, 0xb1,
+  ],
+  [
+    0x32, 0x75, 0x19, 0x3d, 0xff, 0x35, 0x8a, 0x7e, 0x6d, 0x54, 0xc6, 0x80,
+    0xc3, 0xbd, 0x0d, 0x57,
+  ],
+  [
+    0xdf, 0xf5, 0x24, 0xa9, 0x3e, 0xa8, 0x43, 0xc9, 0xd7, 0x79, 0xd6, 0xf6,
+    0x7c, 0x22, 0xb9, 0x03,
+  ],
+  [
+    0xe0, 0x0f, 0xec, 0xde, 0x7a, 0x94, 0xb0, 0xbc, 0xdc, 0xe8, 0x28, 0x50,
+    0x4e, 0x33, 0x0a, 0x4a,
+  ],
+  [
+    0xa7, 0x97, 0x60, 0x73, 0x1e, 0x00, 0x62, 0x44, 0x1a, 0xb8, 0x38, 0x82,
+    0x64, 0x9f, 0x26, 0x41,
+  ],
+  [
+    0xad, 0x45, 0x46, 0x92, 0x27, 0x5e, 0x55, 0x2f, 0x8c, 0xa3, 0xa5, 0x7d,
+    0x69, 0xd5, 0x95, 0x3b,
+  ],
+  [
+    0x07, 0x58, 0xb3, 0x40, 0x86, 0xac, 0x1d, 0xf7, 0x30, 0x37, 0x6b, 0xe4,
+    0x88, 0xd9, 0xe7, 0x89,
+  ],
+  [
+    0xe1, 0x1b, 0x83, 0x49, 0x4c, 0x3f, 0xf8, 0xfe, 0x8d, 0x53, 0xaa, 0x90,
+    0xca, 0xd8, 0x85, 0x61,
+  ],
+  [
+    0x20, 0x71, 0x67, 0xa4, 0x2d, 0x2b, 0x09, 0x5b, 0xcb, 0x9b, 0x25, 0xd0,
+    0xbe, 0xe5, 0x6c, 0x52,
+  ],
+  [
+    0x59, 0xa6, 0x74, 0xd2, 0xe6, 0xf4, 0xb4, 0xc0, 0xd1, 0x66, 0xaf, 0xc2,
+    0x39, 0x4b, 0x63, 0xb6,
+  ],
+];
 const Kuz = () => {
   // Data Parameters
   const [data, setData] = useState({
@@ -26,10 +95,14 @@ const Kuz = () => {
     state: false,
     constants: createConstants().constantsHex,
     roundKeys: Array(10).fill(null),
-    encryptionStates: Array(10).fill(null),
+    encryptionStates: Array(10).fill(Array(5).fill(null)),
+    cipher: "",
   });
   const [iterNum, setIterNum] = useState(1);
   const [encryptionRound, setEncryptionRound] = useState(0);
+  const [block, setBlock] = useState(0);
+  const [xorOp, setXorOp] = useState(0);
+  const [encNonLin, setEncNonLin] = useState([null, null]);
   // method That change data parameters  by any change in form inputs ..
   const handleChange = (event) => {
     const res = document.getElementById("kuz-res");
@@ -39,6 +112,12 @@ const Kuz = () => {
       return {
         ...prev,
         [name]: type === "checkbox" ? checked : value,
+      };
+    });
+    setResult((prev) => {
+      return {
+        ...prev,
+        state: false,
       };
     });
   };
@@ -52,7 +131,9 @@ const Kuz = () => {
         ...prev,
         state: true,
         roundKeys: keyExpansion(data.key),
-        encryptionStates: encryptBlock(paddedPlainText, data.key).state,
+        encryptionStates: encryptBlock(paddedPlainText.slice(0, 16), data.key)
+          .state,
+        cipher: encrypt(paddedPlainText, data.key, data.mode, data.iv),
       };
     });
   };
@@ -60,12 +141,26 @@ const Kuz = () => {
     () =>
       setPaddedPlainText(
         data.plainTextHex
-          ? pkcs7(data.plainText, 16).appendedPlaintextHex
+          ? pkcs7(data.plainText, 16).appendedPlaintextDec
           : pkcs7(textToUtf8(data.plainText).encodedTextHex, 16)
-              .appendedPlaintextHex
+              .appendedPlaintextDec
       ),
-    [data.plainText]
+    [data.plainText, data.plainTextHex]
   );
+  useEffect(
+    () =>
+      setResult((prev) => {
+        return {
+          ...prev,
+          encryptionStates: encryptBlock(
+            paddedPlainText.slice(block * 16, block * 16 + 16),
+            data.key
+          ).state,
+        };
+      }),
+    [block]
+  );
+
   // Function to Show and Hide main sections
   const toggle = (e) => {
     const el = e.target.className;
@@ -240,7 +335,7 @@ const Kuz = () => {
           <th className="left">
             CipherText: <small>(Hexadecimal)</small>
           </th>
-          <span className="break">{data.key}</span>
+          <span className="break">{result.cipher}</span>
           <th className="left">
             CipherText: <small>(Base64)</small>
           </th>
@@ -251,29 +346,44 @@ const Kuz = () => {
         </h3>
         <article id="kuz-format-data">
           <div className="container flex">
-            <th className="left">
-              Encoded PlainText: <small>(UTF-8)</small>
-            </th>
-            <span className="break">
-              {data.plainTextHex
-                ? data.plainText
-                : textToUtf8(data.plainText).encodedTextHex}
-            </span>
-          </div>
-          <div className="container flex">
-            <th className="left">
-              Padded PlainText: <small>(PKCS#7)</small>
-            </th>
-            <span className="break">{paddedPlainText}</span>
+            <p>
+              After encoding PlainText using UTF-8 and padding it using PCSK#7,
+              we get the following blocks
+            </p>
+            <p>
+              Number of (128-bit) blocks in this PlainText:{" "}
+              <span>{paddedPlainText.length / 16}</span>
+            </p>
+
+            <table>
+              <caption>PlainText Blocks</caption>
+              {Array(paddedPlainText.length / 16)
+                .fill(null)
+                .map((e, i) => {
+                  return (
+                    <tr>
+                      <th>Block{i + 1}</th>
+                      {paddedPlainText.slice(i * 16, i * 16 + 16).map((ee) => {
+                        return (
+                          <td>
+                            <span>{ee.toString(16).padStart(2, "0")}</span>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+            </table>
           </div>
         </article>
+
         <h3 className="kuz-key-exp" onClick={toggle}>
           &bull; Key Expansion
         </h3>
         <article id="kuz-key-exp">
           <p>
             The key Expansion stage involves generating a key schedule
-            consisting of 10 round keys{" "}
+            consisting of <span>10</span> round keys
           </p>
           <p>
             The process starts by splitting the master key into two halves to
@@ -283,41 +393,33 @@ const Kuz = () => {
             First Round Key is the left half of the master key, while the second
             is the right half
           </p>
-          <div className="container">
-            <p className="break">
-              <strong>RoundKey1: </strong>
-              <span>{result.roundKeys[0]}</span>
-            </p>
-            <p className="break">
-              <strong>RoundKey2: </strong>
-              <span>{result.roundKeys[0]}</span>
-            </p>
+          <div className="container flex">
+            <table>
+              <caption> Constants </caption>
+              <tbody>
+                {result.constants.map((e, i) => {
+                  return (
+                    <tr>
+                      <th className="pointer" onClick={() => setIterNum(i + 1)}>
+                        C{i + 1}
+                      </th>
+                      {e.map((ee) => {
+                        return (
+                          <td>
+                            <span>{ee}</span>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          <p>The rest 8 keys </p>
-          <table className="container">
-            <caption> Constants </caption>
-            <tbody>
-              {result.constants.map((e, i) => {
-                return (
-                  <tr>
-                    <th className="pointer" onClick={() => setIterNum(i + 1)}>
-                      C{i + 1}
-                    </th>
-                    {e.map((ee) => {
-                      return (
-                        <td>
-                          <span>{ee}</span>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+
           <p>
-            To generate the Constants, we apply the linear transformation on a
-            (16 bytes) block, where all bytes are "00" except the mostright one
+            we get these constants, by appling a linear transformation on a (16
+            bytes) block, where all bytes are "00" except the mostright one
             equals to number of constant
           </p>
           <p>
@@ -417,26 +519,47 @@ const Kuz = () => {
             </table>
           </div>
         </article>
+
         <h3 className="kuz-encrypt" onClick={toggle}>
           &bull; Encryption Process
         </h3>
         <article id="kuz-encrypt">
           <p>
-            We have calculated all the Roundkeys and now we can finally proceed
-            directly to encrypting a block of text, and if you carefully read
-            everything written above, then it will not be difficult to encrypt
-            the text, since all the operations used in this and their sequence
-            have been considered in detail.
+            After calculated all the Roundkeys now we can finally proceed
+            directly to encrypting each block of plaintext,Where each block
+            undergoes ten rounds as follows:
           </p>
+          <p></p>
           <h4>Rounds 1 &rarr; 9</h4>
           <p>
             Each intermediate round in Kuznyechik encryption consists of 3
-            operations applied in sequence on the 16 bytes block of plain text:
+            operations applied in sequence on the 16 bytes block of plaintext:
             XORing with corresponding round key,non-linear transformation and a
             linear transformation
           </p>
           <div className="container flex">
-            <p>Choose a round</p>
+            <p>&bull; Choose a block</p>
+            <table>
+              {Array(paddedPlainText.length / 16)
+                .fill(null)
+                .map((e, i) => {
+                  return (
+                    <tr>
+                      <th className="pointer" onClick={() => setBlock(i)}>
+                        Block{i + 1}
+                      </th>
+                      {paddedPlainText.slice(i * 16, i * 16 + 16).map((ee) => {
+                        return (
+                          <td>
+                            <span>{ee.toString(16).padStart(2, "0")}</span>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+            </table>
+            <p>&bull; Choose a round</p>
             <table>
               {Array(9)
                 .fill(null)
@@ -454,13 +577,13 @@ const Kuz = () => {
             <br />
             <table>
               <tr>
-                <th>
+                <th className="left">
                   {encryptionRound === 0
-                    ? "PlainText"
-                    : `plainText after ${encryptionRound} round`}
+                    ? `Block${block + 1}`
+                    : `Block${block + 1} after round${encryptionRound}`}
                 </th>
                 {result.state &&
-                  result.encryptionStates[encryptionRound].map((e) => {
+                  result.encryptionStates[encryptionRound][0].map((e) => {
                     return (
                       <td>
                         <span>{e.toString(16).padStart(2, "0")}</span>
@@ -469,9 +592,228 @@ const Kuz = () => {
                   })}
               </tr>
               <tr>
-                <th>RoundKey{encryptionRound + 1}</th>
+                <th className="left">RoundKey{encryptionRound + 1}</th>
                 {result.state &&
-                  result.roundKeys[encryptionRound].map((e) => {
+                  result.encryptionStates[encryptionRound][1].map((e) => {
+                    return (
+                      <td>
+                        <span>{e.toString(16).padStart(2, "0")}</span>
+                      </td>
+                    );
+                  })}
+              </tr>
+              <tr>
+                <th className="left">XORing Operation</th>
+                {result.state &&
+                  result.encryptionStates[encryptionRound][2].map((e, i) => {
+                    return (
+                      <td
+                        className="pointer"
+                        onClick={(e) => {
+                          setXorOp(i);
+                          setEncNonLin([
+                            parseInt(
+                              e && e.target.innerText.substring(0, 1),
+                              16
+                            ),
+                            parseInt(
+                              e && e.target.innerText.substring(1, 2),
+                              16
+                            ),
+                          ]);
+                        }}
+                      >
+                        <span>{e.toString(16).padStart(2, "0")}</span>
+                      </td>
+                    );
+                  })}
+              </tr>
+
+              <tr>
+                <th className="left">Non-Linear Transformation</th>
+                {result.state &&
+                  result.encryptionStates[encryptionRound][3].map((e) => {
+                    return (
+                      <td>
+                        <span>{e.toString(16).padStart(2, "0")}</span>
+                      </td>
+                    );
+                  })}
+              </tr>
+              <tr>
+                <th className="left">Linear Transformation</th>
+                {result.state &&
+                  result.encryptionStates[encryptionRound][4].map((e) => {
+                    return (
+                      <td>
+                        <span>{e.toString(16).padStart(2, "0")}</span>
+                      </td>
+                    );
+                  })}
+              </tr>
+              <tr>
+                <th className="left">{`Block${block + 1} after round${
+                  encryptionRound + 1
+                }`}</th>
+                {result.state &&
+                  result.encryptionStates[encryptionRound + 1][0].map((e) => {
+                    return (
+                      <td>
+                        <span>{e.toString(16).padStart(2, "0")}</span>
+                      </td>
+                    );
+                  })}
+              </tr>
+            </table>
+            <br />
+            <table>
+              <caption>XORing Operation</caption>
+              <tr>
+                <th>
+                  {result.state &&
+                    result.encryptionStates[encryptionRound][0][xorOp]
+                      .toString(16)
+                      .padStart(2, "0")}
+                </th>
+                {result.state &&
+                  result.encryptionStates[encryptionRound][0][xorOp]
+                    .toString(2)
+                    .padStart(8, "0")
+                    .split("")
+                    .map((e) => {
+                      return <td>{e}</td>;
+                    })}
+              </tr>
+              <tr>
+                <th>
+                  {result.state &&
+                    result.encryptionStates[encryptionRound][1][xorOp]
+                      .toString(16)
+                      .padStart(2, "0")}
+                </th>
+                {result.state &&
+                  result.encryptionStates[encryptionRound][1][xorOp]
+                    .toString(2)
+                    .padStart(8, "0")
+                    .split("")
+                    .map((e) => {
+                      return <td>{e}</td>;
+                    })}
+              </tr>
+              <tr>
+                <th>
+                  {result.state &&
+                    result.encryptionStates[encryptionRound][0][xorOp]
+                      .toString(16)
+                      .padStart(2, "0")}
+                  &oplus;
+                  {result.state &&
+                    result.encryptionStates[encryptionRound][1][xorOp]
+                      .toString(16)
+                      .padStart(2, "0")}
+                  =
+                  <span>
+                    {result.state &&
+                      result.encryptionStates[encryptionRound][2][xorOp]
+                        .toString(16)
+                        .padStart(2, "0")}
+                  </span>
+                </th>
+                {result.state &&
+                  result.encryptionStates[encryptionRound][2][xorOp]
+                    .toString(2)
+                    .padStart(8, "0")
+                    .split("")
+                    .map((e) => {
+                      return <td>{e}</td>;
+                    })}
+              </tr>
+            </table>
+            <br />
+            <Box
+              data={Pi}
+              value={encNonLin}
+              caption={"Non-Linear Transformation"}
+            />
+            <br />
+            <table>
+              <caption>Linear Transformation</caption>
+              <tr>
+                <th>
+                  Input <small>Hexadecimal</small>
+                </th>
+                {result.state &&
+                  result.encryptionStates[encryptionRound][3].map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+              </tr>
+              <tr>
+                <th>
+                  Input <small>Decimal</small>
+                </th>
+                {result.state &&
+                  result.encryptionStates[encryptionRound][3].map((e) => {
+                    return <td>{e}</td>;
+                  })}
+              </tr>
+              <tr>
+                <th>Coefficients </th>
+                {Coefficients.map((e, i) => {
+                  return <td>{e}</td>;
+                })}
+              </tr>
+            </table>
+            <div className="flex">
+              {result.state &&
+                Array(16)
+                  .fill(null)
+                  .map((e, i) => {
+                    return (
+                      <KuzConst
+                        data={result.encryptionStates[encryptionRound][3]}
+                        index={i}
+                        colorIndex={i + 1}
+                      />
+                    );
+                  })}
+              <p>Last Multiplication as follows: </p>
+              {result.state && (
+                <Ploynomial
+                  data={result.encryptionStates[encryptionRound][3]}
+                />
+              )}
+            </div>
+          </div>
+
+          <h4>Round 10</h4>
+          <div className="container flex">
+            <table>
+              <tr>
+                <th>{`plainText after round9`}</th>
+                {result.state &&
+                  result.encryptionStates[9][0].map((e) => {
+                    return (
+                      <td>
+                        <span>{e.toString(16).padStart(2, "0")}</span>
+                      </td>
+                    );
+                  })}
+              </tr>
+              <tr>
+                <th>RoundKey10</th>
+                {result.state &&
+                  result.encryptionStates[9][1].map((e) => {
+                    return (
+                      <td>
+                        <span>{e.toString(16).padStart(2, "0")}</span>
+                      </td>
+                    );
+                  })}
+              </tr>
+              <tr>
+                <th>XOR</th>
+                {result.state &&
+                  result.encryptionStates[9][4].map((e) => {
                     return (
                       <td>
                         <span>{e.toString(16).padStart(2, "0")}</span>
@@ -481,7 +823,6 @@ const Kuz = () => {
               </tr>
             </table>
           </div>
-          <h4>Round 10</h4>
           <p>{result.cipher}</p>
         </article>
         <h3 className="kuz-decrypt" onClick={toggle}>

@@ -15,6 +15,9 @@ function pkcs7(encodedPlainTextHex, blockSize) {
   const appendedPlaintextBin = Array(
     0.5 * encodedPlainTextHex.length + paddingLength
   );
+  const appendedPlaintextDec = Array(
+    0.5 * encodedPlainTextHex.length + paddingLength
+  );
   // Determine the Value which be added in extra bytes
   const paddingValue = paddingLength.toString(16).padStart(2, "0");
   for (let i = 0; i < 0.5 * encodedPlainTextHex.length; i++) {
@@ -32,8 +35,14 @@ function pkcs7(encodedPlainTextHex, blockSize) {
       .toString(2)
       .padStart(8, "0"));
   });
-  return { appendedPlaintextHex, appendedPlaintextBin };
+  appendedPlaintextHex.map((e, i) => {
+    return (appendedPlaintextDec[i] = parseInt(e, 16));
+  });
+  console.log(appendedPlaintextDec);
+  return { appendedPlaintextHex, appendedPlaintextBin, appendedPlaintextDec };
 }
-// padPKCS7("48656c6c6f").appendedPlaintextHex -> ['48', '65', '6c', '6c','6f', '0b', '0b', '0b',........]
-// padPKCS7("48656c6c6f").appendedPlaintextBin -> ['10101100', '11001010', '00001110', ...............]
+// pkcs7("48656c6c6f").appendedPlaintextHex -> ['48', '65', '6c', '6c','6f', '0b', '0b', '0b',........]
+// pkcs7("48656c6c6f").appendedPlaintextBin -> ['10101100', '11001010', '00001110', ...............]
 export { pkcs7 };
+
+pkcs7("48656c6c6f48656c6c6f48656c6c6f48656c6c6f48656c6c6f48656c6c6f", 16);

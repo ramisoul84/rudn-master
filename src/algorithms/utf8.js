@@ -43,16 +43,22 @@ const charToUtf8 = (char) => {
 const textToUtf8 = (text) => {
   let encodedTextHex = "";
   let encodedTextBin = "";
+  let encodedTextDec = Array();
   for (let i = 0; i < text.length; i++) {
     encodedTextHex += charToUtf8(text[i]).charHex;
   }
   for (let i = 0; i < text.length; i++) {
     encodedTextBin += charToUtf8(text[i]).charBin;
   }
-  console.log(encodedTextHex);
-  console.log(encodedTextBin);
-  return { encodedTextHex, encodedTextBin };
+  for (let i = 0; i < encodedTextHex.length / 2; i++) {
+    encodedTextDec.push(
+      parseInt(encodedTextHex.substring(i * 2, i * 2 + 2), 16)
+    );
+  }
+  return { encodedTextHex, encodedTextBin, encodedTextDec };
 };
 // textToUtf8("Hello").encodedTextHex ---> "48656c6c6f"
 // textToUtf8("Hello").encodedTextBin ---> "0100100001100101011011000110110001101111"
+// textToUtf8("Hello").encodedTextDec ---> [ 72, 101, 108, 108, 111 ]
+
 export { textToUtf8, charToUtf8 };

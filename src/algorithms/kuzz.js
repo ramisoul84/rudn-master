@@ -31,6 +31,15 @@ const vecToArr = (vec) => {
   // [110, 162, 118, 114, 108, 72, 122, 184, 93, 39, 189, 16, 221, 132, 148, 1];
   return arr;
 };
+// method to split padded plainText into blocks, 128-bit each
+const toBlocks = (plainText) => {
+  const numberOfBlocks = plainText.length / 16;
+  const blocks = Array(numberOfBlocks);
+  for (let i = 0; i < numberOfBlocks; i++) {
+    blocks[i] = vecToArr(plainText.substring(i * 32, i * 32 + 32));
+  }
+  return { numberOfBlocks, blocks };
+};
 // Multiplication in GF(2^8) : a,b in decimal => binary|decimal|hexa
 const galoisMultiplication = (a, b) => {
   let p = 0;
@@ -173,13 +182,11 @@ const feistelNetwork = (key, constant) => {
   tempKey = temp.dec.concat(L);
   return tempKey;
 };
-//
+// Generate Key Rounds
 const keyExpansion = (key) => {
-  console.log(key);
-  key = vecToArr(key);
-  console.log(key);
   const constants = createConstants().constantsDec;
   const roundKeys = Array(10);
+  key = vecToArr(key);
   roundKeys[0] = key.slice(0, 16);
   roundKeys[1] = key.slice(16, 32);
   let tempKey = key.slice();
@@ -190,38 +197,72 @@ const keyExpansion = (key) => {
     roundKeys[i * 2 + 2] = tempKey.slice(0, 16);
     roundKeys[i * 2 + 3] = tempKey.slice(16, 32);
   }
-  /*
-  for (let i = 0; i < 10; i++) {
-    console.log(
-      `Key${i + 1}`,
-      roundKeys[i].map((e) => {
-        return e.toString(16);
-      })
-    );
-  }*/
-  console.log(roundKeys);
   return roundKeys;
+  // keyExpansion("8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef");
+  // => [[11,23,59,32......],[],.........] Array[10][16]   each byte in decimal
 };
 //
 const encryptBlock = (block, key) => {
+  console.log("block", block);
   const roundKey = keyExpansion(key);
-  const state = Array(10);
+  const state = Array(10).fill(null);
   let cipher = block.slice();
   for (let i = 0; i < 10; i++) {
-    state[i] = cipher.slice();
+    state[i] = Array(5).fill(null);
+    state[i][0] = cipher.slice();
     if (i === 9) {
       cipher = XOR(cipher, roundKey[i]).dec;
+      state[i][1] = roundKey[i].slice();
+      state[i][4] = cipher.slice();
     } else {
-      cipher = XOR(cipher, roundKey[i]);
-      cipher = subBytes(cipher.dec);
-      cipher = linearTransformation(cipher.dec).dec;
+      console.log("R", roundKey[i]);
+
+      cipher = XOR(cipher, roundKey[i]).dec;
+      state[i][1] = roundKey[i].slice();
+      state[i][2] = cipher.slice();
+      cipher = subBytes(cipher).dec;
+      state[i][3] = cipher.slice();
+      cipher = linearTransformation(cipher).dec;
+      state[i][4] = cipher.slice();
     }
   }
+  //console.log(state);
   return { cipher, state };
+  // encryptBlock([17, 34, 51, 68, 85, 102, 119, 0, 255, 238, 221, 204, 187, 170, 153, 136],
+  // "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef");
+  // .cipher=> [127, 103, 157, 144, 190, 188, 36, 48, 90, 70, 141, 66, 185, 212, 237, 205];
+  // .state => arr[10][16]
 };
-const encrypt = (plainText, key, mode) => {
-  const roundKey = keyExpansion(key);
-  const numberOfBlocks = 1;
+const encrypt = (plainText, key, mode, iv) => {
+  //console.log(plainText);
+  //console.log(key);
+  //console.log(mode);
+  //console.log(iv);
+  const numberOfBlocks = plainText.length / 16;
+  //console.log(numberOfBlocks);
+  const CipherText = Array(numberOfBlocks);
+
+  let temp = vecToArr(iv);
+
+  if (mode === "ecb") {
+    for (let i = 0; i < numberOfBlocks; i++) {
+      CipherText[i] = encryptBlock(
+        plainText.slice(i * 16, i * 16 + 16),
+        key
+      ).cipher;
+    }
+  } else {
+    for (let i = 0; i < numberOfBlocks; i++) {
+      //console.log("temp", temp);
+      //console.log("pt", plainText.slice(i * 16, i * 16 + 16));
+      //console.log("xor", XOR(plainText.slice(i * 16, i * 16 + 16), temp).dec);
+
+      temp = XOR(plainText.slice(i * 16, i * 16 + 16), temp).dec;
+      CipherText[i] = encryptBlock(temp, key).cipher;
+      (temp = CipherText[i]).slice();
+    }
+  }
+  return CipherText;
 };
 
 export {
@@ -231,13 +272,17 @@ export {
   galoisMultiplication,
   keyExpansion,
   encryptBlock,
+  encrypt,
+  toBlocks,
+  Pi,
 };
+
 //createConstants();
 //subBytes(vecToArr("0c3322fed531e4630d80ef5c5a81c50b"));
 let key1 = "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef";
 let k1 = "c3d5fa01ebe36f7a9374427ad7ca89498899aabbccddeeff0011223344556677";
 const key = vecToArr(key1);
-const plainText = vecToArr("1122334455667700ffeeddccbbaa9988");
+const plainText = vecToArr("6ea276726c487ab85d27bd10dd849401");
 //vecToArr("6ea276726c487ab85d27bd10dd849401");
 //constants = createConstants().constantsDec;
 //feistelNetwork(vecToArr(k1), constants[1]);
@@ -248,3 +293,5 @@ const plainText = vecToArr("1122334455667700ffeeddccbbaa9988");
 keyExpansion(
   "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef"
 );
+encryptBlock(plainText, key1);
+//encrypt(plainText, key1, "ecb", "6ea276726c487ab85d27bd10dd849401");
