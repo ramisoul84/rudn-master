@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/rudn-master/static/css/main.aa83c6d6.css",
-    "main.js": "/rudn-master/static/js/main.f8a8311f.js",
+    "main.js": "/rudn-master/static/js/main.2e021187.js",
     "static/media/Bob.png": "/rudn-master/static/media/Bob.fcf0a20814441f0b7056.png",
     "static/media/Alice.png": "/rudn-master/static/media/Alice.9e73b8e60eefc8d546e7.png",
     "static/media/keyExpansion.svg": "/rudn-master/static/media/keyExpansion.25c933bdfc963e56509d6135ca383bf8.svg",
     "index.html": "/rudn-master/index.html",
     "main.aa83c6d6.css.map": "/rudn-master/static/css/main.aa83c6d6.css.map",
-    "main.f8a8311f.js.map": "/rudn-master/static/js/main.f8a8311f.js.map"
+    "main.2e021187.js.map": "/rudn-master/static/js/main.2e021187.js.map"
   },
   "entrypoints": [
     "static/css/main.aa83c6d6.css",
-    "static/js/main.f8a8311f.js"
+    "static/js/main.2e021187.js"
   ]
 }
