@@ -1,16 +1,17 @@
 {
   "files": {
-    "main.css": "/rudn-master/static/css/main.623757b0.css",
-    "main.js": "/rudn-master/static/js/main.9af6a8ae.js",
+    "main.css": "/rudn-master/static/css/main.ac8ea7e1.css",
+    "main.js": "/rudn-master/static/js/main.f9379969.js",
     "static/media/Bob.png": "/rudn-master/static/media/Bob.fcf0a20814441f0b7056.png",
     "static/media/Alice.png": "/rudn-master/static/media/Alice.9e73b8e60eefc8d546e7.png",
+    "static/media/Feistel network.jpg": "/rudn-master/static/media/Feistel network.8c47ff9c9435f38e092f.jpg",
     "static/media/keyExpansion.svg": "/rudn-master/static/media/keyExpansion.25c933bdfc963e56509d6135ca383bf8.svg",
     "index.html": "/rudn-master/index.html",
-    "main.623757b0.css.map": "/rudn-master/static/css/main.623757b0.css.map",
-    "main.9af6a8ae.js.map": "/rudn-master/static/js/main.9af6a8ae.js.map"
+    "main.ac8ea7e1.css.map": "/rudn-master/static/css/main.ac8ea7e1.css.map",
+    "main.f9379969.js.map": "/rudn-master/static/js/main.f9379969.js.map"
   },
   "entrypoints": [
-    "static/css/main.623757b0.css",
-    "static/js/main.9af6a8ae.js"
+    "static/css/main.ac8ea7e1.css",
+    "static/js/main.f9379969.js"
   ]
 }
