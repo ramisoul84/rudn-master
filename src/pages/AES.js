@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { textToUtf8 } from "../algorithms/utf8";
+import { textToUtf8, hexToBase64 } from "../algorithms/encode";
 import { pkcs7 } from "../algorithms/pkcs7";
 import {
   sBox,
@@ -163,11 +163,12 @@ const AES = () => {
           <option value="192">AES-192</option>
           <option value="256">AES-256</option>
         </select>
-        <label htmlFor="version">AES-Mode:</label>
+        {/*     <label htmlFor="version">AES-Mode:</label>
         <select id="mode" name="mode" onChange={handleChange} required>
           <option value="ecb">Electronic Code Book - ECB</option>
           <option value="cbc">Cipher Block Chaining - CBC</option>
-        </select>
+        </select>*/}
+
         <label htmlFor="key">Key:</label>
         <input
           type="text"
@@ -227,10 +228,12 @@ const AES = () => {
             CipherText: <small>(Hexadecimal)</small>
           </th>
           <span className="break">{result.cipherTextHexBlocks}</span>
-          <th className="left">
+          {/*     <th className="left">
             CipherText: <small>(Base64)</small>
           </th>
-          <span className="break">{result.plainText}</span>
+          <span className="break">
+            {hexToBase64(result.cipherTextHexBlocks.join(""))}
+          </span>*/}
         </div>
         <h1>
           And here is the explation how to obtain the cipherText, step by step

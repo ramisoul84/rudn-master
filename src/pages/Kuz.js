@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { textToUtf8 } from "../algorithms/utf8";
+import { textToUtf8, decToBase64 } from "../algorithms/encode";
 import { pkcs7 } from "../algorithms/pkcs7";
 import {
   createConstants,
@@ -80,6 +80,72 @@ const Pi = [
     0x39, 0x4b, 0x63, 0xb6,
   ],
 ];
+const reverse_Pi = [
+  [
+    0xa5, 0x2d, 0x32, 0x8f, 0x0e, 0x30, 0x38, 0xc0, 0x54, 0xe6, 0x9e, 0x39,
+    0x55, 0x7e, 0x52, 0x91,
+  ],
+  [
+    0x64, 0x03, 0x57, 0x5a, 0x1c, 0x60, 0x07, 0x18, 0x21, 0x72, 0xa8, 0xd1,
+    0x29, 0xc6, 0xa4, 0x3f,
+  ],
+  [
+    0xe0, 0x27, 0x8d, 0x0c, 0x82, 0xea, 0xae, 0xb4, 0x9a, 0x63, 0x49, 0xe5,
+    0x42, 0xe4, 0x15, 0xb7,
+  ],
+  [
+    0xc8, 0x06, 0x70, 0x9d, 0x41, 0x75, 0x19, 0xc9, 0xaa, 0xfc, 0x4d, 0xbf,
+    0x2a, 0x73, 0x84, 0xd5,
+  ],
+  [
+    0xc3, 0xaf, 0x2b, 0x86, 0xa7, 0xb1, 0xb2, 0x5b, 0x46, 0xd3, 0x9f, 0xfd,
+    0xd4, 0x0f, 0x9c, 0x2f,
+  ],
+  [
+    0x9b, 0x43, 0xef, 0xd9, 0x79, 0xb6, 0x53, 0x7f, 0xc1, 0xf0, 0x23, 0xe7,
+    0x25, 0x5e, 0xb5, 0x1e,
+  ],
+  [
+    0xa2, 0xdf, 0xa6, 0xfe, 0xac, 0x22, 0xf9, 0xe2, 0x4a, 0xbc, 0x35, 0xca,
+    0xee, 0x78, 0x05, 0x6b,
+  ],
+  [
+    0x51, 0xe1, 0x59, 0xa3, 0xf2, 0x71, 0x56, 0x11, 0x6a, 0x89, 0x94, 0x65,
+    0x8c, 0xbb, 0x77, 0x3c,
+  ],
+  [
+    0x7b, 0x28, 0xab, 0xd2, 0x31, 0xde, 0xc4, 0x5f, 0xcc, 0xcf, 0x76, 0x2c,
+    0xb8, 0xd8, 0x2e, 0x36,
+  ],
+  [
+    0xdb, 0x69, 0xb3, 0x14, 0x95, 0xbe, 0x62, 0xa1, 0x3b, 0x16, 0x66, 0xe9,
+    0x5c, 0x6c, 0x6d, 0xad,
+  ],
+  [
+    0x37, 0x61, 0x4b, 0xb9, 0xe3, 0xba, 0xf1, 0xa0, 0x85, 0x83, 0xda, 0x47,
+    0xc5, 0xb0, 0x33, 0xfa,
+  ],
+  [
+    0x96, 0x6f, 0x6e, 0xc2, 0xf6, 0x50, 0xff, 0x5d, 0xa9, 0x8e, 0x17, 0x1b,
+    0x97, 0x7d, 0xec, 0x58,
+  ],
+  [
+    0xf7, 0x1f, 0xfb, 0x7c, 0x09, 0x0d, 0x7a, 0x67, 0x45, 0x87, 0xdc, 0xe8,
+    0x4f, 0x1d, 0x4e, 0x04,
+  ],
+  [
+    0xeb, 0xf8, 0xf3, 0x3e, 0x3d, 0xbd, 0x8a, 0x88, 0xdd, 0xcd, 0x0b, 0x13,
+    0x98, 0x02, 0x93, 0x80,
+  ],
+  [
+    0x90, 0xd0, 0x24, 0x34, 0xcb, 0xed, 0xf4, 0xce, 0x99, 0x10, 0x44, 0x40,
+    0x92, 0x3a, 0x01, 0x26,
+  ],
+  [
+    0x12, 0x1a, 0x48, 0x68, 0xf5, 0x81, 0x8b, 0xc7, 0xd6, 0x20, 0x0a, 0x08,
+    0x00, 0x4c, 0xd7, 0x74,
+  ],
+];
 const Kuz = () => {
   // Data Parameters
   const [data, setData] = useState({
@@ -89,6 +155,7 @@ const Kuz = () => {
     plainText: "",
     plainTextHex: false,
   });
+
   const [plainTextValidity, setPlainTextValidity] = useState(false);
   const [paddedPlainText, setPaddedPlainText] = useState("");
   const [result, setResult] = useState({
@@ -98,6 +165,17 @@ const Kuz = () => {
     encryptionStates: Array(10).fill(Array(5).fill(null)),
     cipher: "",
   });
+  const [inputBlock, setInputBlock] = useState(
+    encrypt(
+      [
+        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x00, 0xff, 0xee, 0xdd, 0xcc,
+        0xbb, 0xaa, 0x99, 0x88,
+      ],
+      "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef",
+      data.mode,
+      data.iv
+    ).states
+  );
   const [iterNum, setIterNum] = useState(1);
   const [encryptionRound, setEncryptionRound] = useState(0);
   const [block, setBlock] = useState(0);
@@ -131,9 +209,9 @@ const Kuz = () => {
         ...prev,
         state: true,
         roundKeys: keyExpansion(data.key),
-        encryptionStates: encryptBlock(paddedPlainText.slice(0, 16), data.key)
-          .state,
-        cipher: encrypt(paddedPlainText, data.key, data.mode, data.iv),
+        encryptionStates: encryptBlock(inputBlock[block][1], data.key).state,
+        cipher: encrypt(paddedPlainText, data.key, data.mode, data.iv)
+          .CipherText,
       };
     });
   };
@@ -149,17 +227,24 @@ const Kuz = () => {
   );
   useEffect(
     () =>
+      setInputBlock(
+        encrypt(paddedPlainText, data.key, data.mode, data.iv).states
+      ),
+    [paddedPlainText, data.key, data.mode, data.iv]
+  );
+  useEffect(
+    () =>
       setResult((prev) => {
         return {
           ...prev,
-          encryptionStates: encryptBlock(
-            paddedPlainText.slice(block * 16, block * 16 + 16),
-            data.key
-          ).state,
+          encryptionStates: encryptBlock(inputBlock[block][1], data.key).state,
+          cipher: encrypt(paddedPlainText, data.key, data.mode, data.iv)
+            .CipherText,
         };
       }),
     [block]
   );
+  //
 
   // Function to Show and Hide main sections
   const toggle = (e) => {
@@ -332,14 +417,35 @@ const Kuz = () => {
             Key: <small>(Hexadecimal)</small>
           </th>
           <span className="break">{data.key}</span>
+          {data.mode === "cbc" && (
+            <>
+              <th className="left">
+                IV: <small>(Hexadecimal)</small>
+              </th>
+              <span className="break">{data.iv}</span>
+            </>
+          )}
           <th className="left">
             CipherText: <small>(Hexadecimal)</small>
           </th>
-          <span className="break">{result.cipher}</span>
+          <span className="break">
+            {result.state &&
+              result.cipher.map((e) => {
+                return (
+                  <>
+                    {e.map((ee) => {
+                      return <>{ee.toString(16).padStart(2, "0")}</>;
+                    })}
+                  </>
+                );
+              })}
+          </span>
           <th className="left">
             CipherText: <small>(Base64)</small>
           </th>
-          <span className="break">{data.key}</span>
+          <span className="break">
+            {result.state && decToBase64(result.cipher.flat())}
+          </span>
         </div>
         <h3 className="kuz-format-data" onClick={toggle}>
           &bull; Formatting Data
@@ -579,7 +685,11 @@ const Kuz = () => {
               <tr>
                 <th className="left">
                   {encryptionRound === 0
-                    ? `Block${block + 1}`
+                    ? data.mode === "ecb"
+                      ? `Block${block + 1}`
+                      : block === 0
+                      ? `Xored Block${block + 1} With IV`
+                      : `Xored Block${block + 1} With Cipher${block}`
                     : `Block${block + 1} after round${encryptionRound}`}
                 </th>
                 {result.state &&
@@ -602,6 +712,8 @@ const Kuz = () => {
                     );
                   })}
               </tr>
+              <br />
+
               <tr>
                 <th className="left">XORing Operation</th>
                 {result.state &&
@@ -628,7 +740,6 @@ const Kuz = () => {
                     );
                   })}
               </tr>
-
               <tr>
                 <th className="left">Non-Linear Transformation</th>
                 {result.state &&
@@ -651,6 +762,7 @@ const Kuz = () => {
                     );
                   })}
               </tr>
+              <br />
               <tr>
                 <th className="left">{`Block${block + 1} after round${
                   encryptionRound + 1
@@ -666,6 +778,10 @@ const Kuz = () => {
               </tr>
             </table>
             <br />
+            <p>
+              &bull; Press a Byte from a Xoring Operation result above to see
+              details{" "}
+            </p>
             <table>
               <caption>XORing Operation</caption>
               <tr>
@@ -735,11 +851,12 @@ const Kuz = () => {
               value={encNonLin}
               caption={"Non-Linear Transformation"}
             />
+
             <br />
             <table>
               <caption>Linear Transformation</caption>
               <tr>
-                <th>
+                <th className="left">
                   Input <small>Hexadecimal</small>
                 </th>
                 {result.state &&
@@ -748,7 +865,7 @@ const Kuz = () => {
                   })}
               </tr>
               <tr>
-                <th>
+                <th className="left">
                   Input <small>Decimal</small>
                 </th>
                 {result.state &&
@@ -757,7 +874,7 @@ const Kuz = () => {
                   })}
               </tr>
               <tr>
-                <th>Coefficients </th>
+                <th className="left">Coefficients </th>
                 {Coefficients.map((e, i) => {
                   return <td>{e}</td>;
                 })}
@@ -789,7 +906,7 @@ const Kuz = () => {
           <div className="container flex">
             <table>
               <tr>
-                <th>{`plainText after round9`}</th>
+                <th className="left">{`plainText after round9`}</th>
                 {result.state &&
                   result.encryptionStates[9][0].map((e) => {
                     return (
@@ -800,7 +917,7 @@ const Kuz = () => {
                   })}
               </tr>
               <tr>
-                <th>RoundKey10</th>
+                <th className="left">RoundKey10</th>
                 {result.state &&
                   result.encryptionStates[9][1].map((e) => {
                     return (
@@ -811,7 +928,19 @@ const Kuz = () => {
                   })}
               </tr>
               <tr>
-                <th>XOR</th>
+                <th className="left">XOR</th>
+                {result.state &&
+                  result.encryptionStates[9][4].map((e) => {
+                    return (
+                      <td>
+                        <span>{e.toString(16).padStart(2, "0")}</span>
+                      </td>
+                    );
+                  })}
+              </tr>
+              <br />
+              <tr>
+                <th className="left">{`Cipher${block}`}</th>
                 {result.state &&
                   result.encryptionStates[9][4].map((e) => {
                     return (
@@ -823,12 +952,13 @@ const Kuz = () => {
               </tr>
             </table>
           </div>
-          <p>{result.cipher}</p>
         </article>
         <h3 className="kuz-decrypt" onClick={toggle}>
-          &bull; Encryption Process
+          &bull; Decryption Process
         </h3>
-        <article id="kuz-decrypt"></article>
+        <article id="kuz-decrypt">
+          <Box data={reverse_Pi} value={[null, null]} />
+        </article>
       </div>
     </section>
   );

@@ -67,7 +67,8 @@
 #kuz span {
   font-size: 20px;
   color: red;
-  font-weight: 400;
+  font-weight: 600;
+  font-family: "Rajdhani";
 }
 
 #kuz input:invalid {

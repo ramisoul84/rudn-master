@@ -106,7 +106,9 @@ const Ploynomial = ({ data }) => {
         </tr>
       </table>
       <p>
-        ({linearTransformation(data).calc[15][32].toString(2).padStart(8, "0")})
+        {" "}
+        &rArr; (
+        {linearTransformation(data).calc[15][32].toString(2).padStart(8, "0")})
         <sub>2</sub> = (
         <span>
           {" "}

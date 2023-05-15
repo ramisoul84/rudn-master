@@ -517,3 +517,41 @@ const stateToVector = (state) => {
 };
 //stateToVector([[1,2,3,4],[5,6,7,8],[..],[..]]) -> [1,2,3,4,5,6,7,8,9...]
 export { sBox, invSBox, rCon, mixMatHex, invMixMatHex, dot, aesEncrypt };
+
+// a method to encrypt one block , argument Array of bytes in binary format
+const aesEncryptBlock1 = (plaintextBlockBin, key) => {
+  const Nr = key.length / 4 + 6; // Number of Rounds
+  const roundKeysBin = keyExpansion(key).roundKeysBin;
+  const states = [];
+  states[0] = [];
+  states[0].push(vectorToState(plaintextBlockBin));
+  states[0].push(null);
+  states[0].push(null);
+  states[0].push(null);
+  states[0].push(vectorToState(roundKeysBin[0]));
+  states[0].push(xorStates(states[0][0], states[0][4]));
+  for (let i = 1; i < Nr; i++) {
+    states[i] = [];
+    states[i].push(states[i - 1][5]);
+    states[i].push(subBytes(states[i - 1][5]));
+    states[i].push(shiftRows(subBytes(states[i - 1][5])));
+    states[i].push(mixColumns(shiftRows(subBytes(states[i - 1][5]))));
+    states[i].push(vectorToState(roundKeysBin[i]));
+    states[i].push(xorStates(states[i][3], states[i][4]));
+  }
+  states[Nr] = [];
+  states[Nr].push(states[Nr - 1][5]);
+  states[Nr].push(subBytes(states[Nr - 1][5]));
+  states[Nr].push(shiftRows(subBytes(states[Nr - 1][5])));
+  states[Nr].push(null);
+  states[Nr].push(vectorToState(roundKeysBin[Nr]));
+  states[Nr].push(
+    xorStates(
+      shiftRows(subBytes(states[Nr - 1][5])),
+      vectorToState(roundKeysBin[Nr])
+    )
+  );
+
+  const cipherBin = stateToVector(states[Nr][5]);
+  return cipherBin;
+};

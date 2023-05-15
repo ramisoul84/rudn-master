@@ -4,7 +4,7 @@ const KuzConst = ({ data, index, colorIndex }) => {
   return (
     <table className="flex">
       <p className="break">
-        A=
+        &bull;
         {linearTransformation(data)
           .calc[index].slice(0, 32)
           .map((e, i) => {

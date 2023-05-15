@@ -32,8 +32,8 @@ const data = [
     link: "/rudn-master/base64",
   },
   {
-    title: "PCSK#7 Padding Scheme",
-    link: "/rudn-master/pcsk",
+    title: "PKCS#7 Padding Scheme",
+    link: "/rudn-master/pkcs7",
   },
 ];
 

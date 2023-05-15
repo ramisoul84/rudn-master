@@ -21,6 +21,29 @@ const Pi = [
   0x25, 0xd0, 0xbe, 0xe5, 0x6c, 0x52, 0x59, 0xa6, 0x74, 0xd2, 0xe6, 0xf4, 0xb4,
   0xc0, 0xd1, 0x66, 0xaf, 0xc2, 0x39, 0x4b, 0x63, 0xb6,
 ];
+// Table Inverse Non-Linear Transformation
+const reverse_Pi = [
+  0xa5, 0x2d, 0x32, 0x8f, 0x0e, 0x30, 0x38, 0xc0, 0x54, 0xe6, 0x9e, 0x39, 0x55,
+  0x7e, 0x52, 0x91, 0x64, 0x03, 0x57, 0x5a, 0x1c, 0x60, 0x07, 0x18, 0x21, 0x72,
+  0xa8, 0xd1, 0x29, 0xc6, 0xa4, 0x3f, 0xe0, 0x27, 0x8d, 0x0c, 0x82, 0xea, 0xae,
+  0xb4, 0x9a, 0x63, 0x49, 0xe5, 0x42, 0xe4, 0x15, 0xb7, 0xc8, 0x06, 0x70, 0x9d,
+  0x41, 0x75, 0x19, 0xc9, 0xaa, 0xfc, 0x4d, 0xbf, 0x2a, 0x73, 0x84, 0xd5, 0xc3,
+  0xaf, 0x2b, 0x86, 0xa7, 0xb1, 0xb2, 0x5b, 0x46, 0xd3, 0x9f, 0xfd, 0xd4, 0x0f,
+  0x9c, 0x2f, 0x9b, 0x43, 0xef, 0xd9, 0x79, 0xb6, 0x53, 0x7f, 0xc1, 0xf0, 0x23,
+  0xe7, 0x25, 0x5e, 0xb5, 0x1e, 0xa2, 0xdf, 0xa6, 0xfe, 0xac, 0x22, 0xf9, 0xe2,
+  0x4a, 0xbc, 0x35, 0xca, 0xee, 0x78, 0x05, 0x6b, 0x51, 0xe1, 0x59, 0xa3, 0xf2,
+  0x71, 0x56, 0x11, 0x6a, 0x89, 0x94, 0x65, 0x8c, 0xbb, 0x77, 0x3c, 0x7b, 0x28,
+  0xab, 0xd2, 0x31, 0xde, 0xc4, 0x5f, 0xcc, 0xcf, 0x76, 0x2c, 0xb8, 0xd8, 0x2e,
+  0x36, 0xdb, 0x69, 0xb3, 0x14, 0x95, 0xbe, 0x62, 0xa1, 0x3b, 0x16, 0x66, 0xe9,
+  0x5c, 0x6c, 0x6d, 0xad, 0x37, 0x61, 0x4b, 0xb9, 0xe3, 0xba, 0xf1, 0xa0, 0x85,
+  0x83, 0xda, 0x47, 0xc5, 0xb0, 0x33, 0xfa, 0x96, 0x6f, 0x6e, 0xc2, 0xf6, 0x50,
+  0xff, 0x5d, 0xa9, 0x8e, 0x17, 0x1b, 0x97, 0x7d, 0xec, 0x58, 0xf7, 0x1f, 0xfb,
+  0x7c, 0x09, 0x0d, 0x7a, 0x67, 0x45, 0x87, 0xdc, 0xe8, 0x4f, 0x1d, 0x4e, 0x04,
+  0xeb, 0xf8, 0xf3, 0x3e, 0x3d, 0xbd, 0x8a, 0x88, 0xdd, 0xcd, 0x0b, 0x13, 0x98,
+  0x02, 0x93, 0x80, 0x90, 0xd0, 0x24, 0x34, 0xcb, 0xed, 0xf4, 0xce, 0x99, 0x10,
+  0x44, 0x40, 0x92, 0x3a, 0x01, 0x26, 0x12, 0x1a, 0x48, 0x68, 0xf5, 0x81, 0x8b,
+  0xc7, 0xd6, 0x20, 0x0a, 0x08, 0x00, 0x4c, 0xd7, 0x74,
+];
 // Convertor from vec to Array
 const vecToArr = (vec) => {
   const arr = Array(vec.length / 2);
@@ -96,11 +119,97 @@ const linearTransformation = (block) => {
   // [110, 162, 118, 114, 108, 72, 122, 184, 93, 39, 189, 16, 221, 132, 148, 1];
   // ['6e', 'a2', '76', '72','6c', '48', '7a', 'b8','5d', '27', 'bd', '10','dd', '84', '94', '01']
 };
+// Inverse Linear Transformation L^-1
+const inverseLinearTransformation = (block) => {
+  let aLast;
+  // result block in decimal
+  let dec = Array(16).fill(null);
+  // result block in hex
+  let hex = Array(16).fill(null);
+  // intermediate states
+  for (let j = 0; j < 16; j++) {
+    aLast = 0;
+    for (let i = 0; i < 16; i++) {
+      aLast ^= galoisMultiplication(block[i], Coefficients[15 - i]).dec;
+    }
+    for (let i = 0; i < 15; i++) {
+      dec[i] = block[i + 1];
+    }
+
+    dec[15] = aLast;
+    block = dec;
+  }
+  dec.map((e, i) => {
+    return (hex[i] = e.toString(16).padStart(2, "0"));
+  });
+  console.log(hex);
+  return { dec, hex };
+};
+// Обратное преобразование R
+const rTransformationReverse1 = (input) => {
+  let aLast = input[0];
+  let state = Array(16);
+  for (let i = 0; i < 16; i++) {
+    state[i] = input[i + 1];
+  }
+  for (let i = 14; i >= 0; i--) {
+    aLast ^= galoisMultiplication(state[i], Coefficients[i]).dec;
+  }
+  state[15] = aLast;
+  console.log(state);
+  return state;
+};
+const rTransformationReverse = (input) => {
+  let aLast = 0;
+  let state = Array(16);
+
+  for (let i = 0; i < 16; i++) {
+    aLast ^= galoisMultiplication(input[i], Coefficients[16 - i]).dec;
+  }
+  for (let i = 0; i < 15; i++) {
+    state[i] = input[i + 1];
+  }
+  state[15] = aLast;
+  console.log(state);
+  return state;
+};
+
+// Обратное линейное преобразование (преобразование L)
+const lTransformationReverse = (input) => {
+  let hex = Array(16).fill(null);
+  var state = input;
+  for (let i = 0; i < 16; i++) {
+    state = rTransformationReverse(state);
+  }
+  state.map((e, i) => {
+    return (hex[i] = e.toString(16).padStart(2, "0"));
+  });
+  console.log(hex);
+  return state;
+};
+
 // Non-Linear Transformation S
 const subBytes = (block) => {
   const dec = Array(16);
   for (let i = 0; i < 16; i++) {
     dec[i] = Pi[block[i]];
+  }
+  const hex = Array(16);
+  dec.map((e, i) => {
+    return (hex[i] = e.toString(16).padStart(2, "0"));
+  });
+  return { dec, hex };
+  /*
+  subBytes([32, 168, 237, 156, 69, 193, 106, 241, 97, 155, 20, 30, 88, 216, 167, 94,]);
+  => [249, 26, 229, 78, 200, 88, 120, 166, 161, 80, 147, 95, 191, 141, 68, 93]
+  => ['f9', '1a', 'e5', '4e','c8', '58', '78', 'a6','a1', '50', '93', '5f','bf', '8d', '44', '5d']
+    */
+};
+// Inverse Non-Linear Transformation S
+const inverseSubBytes = (block) => {
+  const dec = Array(16);
+  for (let i = 0; i < 16; i++) {
+    dec[i] = reverse_Pi[block[i]];
   }
   const hex = Array(16);
   dec.map((e, i) => {
@@ -215,7 +324,7 @@ const encryptBlock = (block, key) => {
       state[i][1] = roundKey[i].slice();
       state[i][4] = cipher.slice();
     } else {
-      console.log("R", roundKey[i]);
+      //console.log("R", roundKey[i]);
 
       cipher = XOR(cipher, roundKey[i]).dec;
       state[i][1] = roundKey[i].slice();
@@ -233,36 +342,67 @@ const encryptBlock = (block, key) => {
   // .cipher=> [127, 103, 157, 144, 190, 188, 36, 48, 90, 70, 141, 66, 185, 212, 237, 205];
   // .state => arr[10][16]
 };
+// main method to encrypt the whole plainText
 const encrypt = (plainText, key, mode, iv) => {
-  //console.log(plainText);
-  //console.log(key);
-  //console.log(mode);
-  //console.log(iv);
+  key =
+    key.length === 64
+      ? key
+      : "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef";
+  iv = iv.length === 32 ? iv : "6ea276726c487ab85d27bd10dd849401";
+  console.log("PlainText", plainText);
+  console.log("Key=", key);
+  console.log(mode);
+  console.log(iv);
   const numberOfBlocks = plainText.length / 16;
-  //console.log(numberOfBlocks);
+  console.log(numberOfBlocks);
   const CipherText = Array(numberOfBlocks);
+  const ivArr = vecToArr(iv);
+  console.log("IV=", ivArr);
+  let states = Array(numberOfBlocks).fill(null);
 
-  let temp = vecToArr(iv);
+  let input =
+    mode === "ecb"
+      ? plainText.slice(0, 16)
+      : XOR(plainText.slice(0, 16), ivArr).dec;
+  for (let i = 0; i < numberOfBlocks; i++) {
+    states[i] = Array(3).fill(null);
+    if (i === 0) {
+      CipherText[i] = encryptBlock(input, key).cipher;
+      states[i][0] = plainText.slice(0, 16);
 
-  if (mode === "ecb") {
-    for (let i = 0; i < numberOfBlocks; i++) {
-      CipherText[i] = encryptBlock(
-        plainText.slice(i * 16, i * 16 + 16),
-        key
-      ).cipher;
+      states[i][1] = input;
+      states[i][2] = CipherText[i];
+    } else {
+      if (mode === "ecb") {
+        CipherText[i] = encryptBlock(
+          plainText.slice(i * 16, i * 16 + 16),
+          key
+        ).cipher;
+        states[i][0] = plainText.slice(i * 16, i * 16 + 16);
+        states[i][1] = plainText.slice(i * 16, i * 16 + 16);
+        states[i][2] = CipherText[i];
+      } else {
+        input = XOR(
+          plainText.slice(i * 16, i * 16 + 16),
+          CipherText[i - 1]
+        ).dec;
+        states[i][0] = plainText.slice(i * 16, i * 16 + 16);
+        states[i][1] = input;
+        CipherText[i] = encryptBlock(input, key).cipher;
+        states[i][2] = CipherText[i];
+      }
     }
-  } else {
-    for (let i = 0; i < numberOfBlocks; i++) {
-      //console.log("temp", temp);
-      //console.log("pt", plainText.slice(i * 16, i * 16 + 16));
-      //console.log("xor", XOR(plainText.slice(i * 16, i * 16 + 16), temp).dec);
-
-      temp = XOR(plainText.slice(i * 16, i * 16 + 16), temp).dec;
-      CipherText[i] = encryptBlock(temp, key).cipher;
-      (temp = CipherText[i]).slice();
-    }
+    /*
+    i === 0
+      ? (CipherText[i] = encryptBlock(input, key).cipher)
+      : mode === "ecb"
+      ? (CipherText[i] = encryptBlock(
+          plainText.slice(i * 16, i * 16 + 16),
+          key
+        ).cipher)
+      : (CipherText[i] = encryptBlock(CipherText[i - 1], key).cipher);*/
   }
-  return CipherText;
+  return { CipherText, states };
 };
 
 export {
@@ -279,10 +419,12 @@ export {
 
 //createConstants();
 //subBytes(vecToArr("0c3322fed531e4630d80ef5c5a81c50b"));
-let key1 = "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef";
+let key1 = "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdefaa";
 let k1 = "c3d5fa01ebe36f7a9374427ad7ca89498899aabbccddeeff0011223344556677";
 const key = vecToArr(key1);
-const plainText = vecToArr("6ea276726c487ab85d27bd10dd849401");
+const plainText = vecToArr(
+  "c3d5fa01ebe36f7a9374427ad7ca89498899aabbccddeeff0011223344556677"
+);
 //vecToArr("6ea276726c487ab85d27bd10dd849401");
 //constants = createConstants().constantsDec;
 //feistelNetwork(vecToArr(k1), constants[1]);
@@ -290,8 +432,9 @@ const plainText = vecToArr("6ea276726c487ab85d27bd10dd849401");
 //keyExpansion(vecToArr(key));
 //encrypt(plainText, key);
 //linearTransformation([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
-keyExpansion(
-  "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef"
-);
-encryptBlock(plainText, key1);
+
+//encryptBlock(plainText, key1);
 //encrypt(plainText, key1, "ecb", "6ea276726c487ab85d27bd10dd849401");
+linearTransformation([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+inverseLinearTransformation(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));
+//lTransformationReverse(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));

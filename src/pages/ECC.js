@@ -498,7 +498,6 @@ const ECC = () => {
           </article>
         </ul>
       </div>
-      <h1>secp256k1</h1>
     </section>
   );
 };

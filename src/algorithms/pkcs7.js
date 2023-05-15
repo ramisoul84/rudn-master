@@ -38,11 +38,11 @@ function pkcs7(encodedPlainTextHex, blockSize) {
   appendedPlaintextHex.map((e, i) => {
     return (appendedPlaintextDec[i] = parseInt(e, 16));
   });
-  console.log(appendedPlaintextDec);
   return { appendedPlaintextHex, appendedPlaintextBin, appendedPlaintextDec };
 }
-// pkcs7("48656c6c6f").appendedPlaintextHex -> ['48', '65', '6c', '6c','6f', '0b', '0b', '0b',........]
+// pkcs7("48656c6c6f",16).appendedPlaintextHex -> ['48', '65', '6c', '6c','6f', '0b', '0b', '0b',........]
 // pkcs7("48656c6c6f").appendedPlaintextBin -> ['10101100', '11001010', '00001110', ...............]
 export { pkcs7 };
+//"48656c6c6f48656c6c6f48656c6c6f48656c6c6f48656c6c6f48656c6c6f"
 
-pkcs7("48656c6c6f48656c6c6f48656c6c6f48656c6c6f48656c6c6f48656c6c6f", 16);
+//pkcs7("48", 16);
