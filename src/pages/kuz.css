@@ -98,3 +98,12 @@
   color: var(--color-dark);
   background-color: var(--color-light);
 }
+
+#kuz .key-exp-fn {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 15px;
+}
+#kuz img {
+  width: 100%;
+}

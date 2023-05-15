@@ -295,12 +295,14 @@ const feistelNetwork = (key, constant) => {
 const keyExpansion = (key) => {
   const constants = createConstants().constantsDec;
   const roundKeys = Array(10);
+  const states = Array(32);
   key = vecToArr(key);
   roundKeys[0] = key.slice(0, 16);
   roundKeys[1] = key.slice(16, 32);
   let tempKey = key.slice();
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < 8; j++) {
+      states[j + 8 * i] = Array(7);
       tempKey = feistelNetwork(tempKey, constants[i * 8 + j]);
     }
     roundKeys[i * 2 + 2] = tempKey.slice(0, 16);
@@ -309,6 +311,33 @@ const keyExpansion = (key) => {
   return roundKeys;
   // keyExpansion("8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef");
   // => [[11,23,59,32......],[],.........] Array[10][16]   each byte in decimal
+};
+const keyStates = (key) => {
+  const constants = createConstants().constantsDec;
+  console.log(key);
+  key = vecToArr(key);
+  console.log(key);
+  const states = Array(32);
+  states[0] = Array(7);
+  states[0][0] = key.slice(0, 16);
+  states[0][1] = key.slice(16, 32);
+  states[0][2] = constants[0];
+  states[0][3] = XOR(states[0][0], states[0][2]).dec;
+  states[0][4] = subBytes(states[0][3]).dec;
+  states[0][5] = linearTransformation(states[0][4]).dec;
+  states[0][6] = XOR(states[0][5], states[0][1]).dec;
+  for (let i = 1; i < 32; i++) {
+    states[i] = Array(7);
+    states[i][0] = states[i - 1][6];
+    states[i][1] = states[i - 1][0];
+    states[i][2] = constants[i];
+    states[i][3] = XOR(states[i][0], states[i][2]).dec;
+    states[i][4] = subBytes(states[i][3]).dec;
+    states[i][5] = linearTransformation(states[i][4]).dec;
+    states[i][6] = XOR(states[i][5], states[i][1]).dec;
+  }
+  console.log(states);
+  return states;
 };
 //
 const encryptBlock = (block, key) => {
@@ -411,6 +440,7 @@ export {
   linearTransformation,
   galoisMultiplication,
   keyExpansion,
+  keyStates,
   encryptBlock,
   encrypt,
   toBlocks,
@@ -429,12 +459,14 @@ const plainText = vecToArr(
 //constants = createConstants().constantsDec;
 //feistelNetwork(vecToArr(k1), constants[1]);
 //subBytes(vecToArr("e63bdcc9a09594475d369f2399d1f276"));
-//keyExpansion(vecToArr(key));
+//keyExpansion(key1);
+
 //encrypt(plainText, key);
 //linearTransformation([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
 //encryptBlock(plainText, key1);
 //encrypt(plainText, key1, "ecb", "6ea276726c487ab85d27bd10dd849401");
-linearTransformation([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
-inverseLinearTransformation(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));
+//linearTransformation([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+//inverseLinearTransformation(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));
 //lTransformationReverse(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));
+keyStates(key1);

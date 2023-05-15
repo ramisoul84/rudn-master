@@ -100,3 +100,9 @@ const Base64LookupTable =
 
 //console.log("Encoded:", encoded);
 //console.log("Decoded:", decoded);
+
+const textToBase64 = (text) => {};
+
+const hexToBase64_1 = (hex) => {};
+
+const binToBase64 = (hex) => {};

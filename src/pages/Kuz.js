@@ -6,10 +6,12 @@ import {
   Coefficients,
   linearTransformation,
   keyExpansion,
+  keyStates,
   encryptBlock,
   encrypt,
   toBlocks,
 } from "../algorithms/kuzz";
+import FN from "../images/Feistel network.jpg";
 import KuzConst from "../components/KuzConst";
 import Ploynomial from "../components/Polynomial";
 import Box from "../components/Box";
@@ -177,6 +179,8 @@ const Kuz = () => {
     ).states
   );
   const [iterNum, setIterNum] = useState(1);
+  const [key, setKey] = useState(0);
+  const [keyExpRound, setKeyExpRound] = useState(0);
   const [encryptionRound, setEncryptionRound] = useState(0);
   const [block, setBlock] = useState(0);
   const [xorOp, setXorOp] = useState(0);
@@ -457,7 +461,7 @@ const Kuz = () => {
               we get the following blocks
             </p>
             <p>
-              Number of (128-bit) blocks in this PlainText:{" "}
+              &bull;The number of (128-bit) blocks in this PlainText is:{" "}
               <span>{paddedPlainText.length / 16}</span>
             </p>
 
@@ -487,18 +491,28 @@ const Kuz = () => {
           &bull; Key Expansion
         </h3>
         <article id="kuz-key-exp">
-          <p>
-            The key Expansion stage involves generating a key schedule
-            consisting of <span>10</span> round keys
-          </p>
-          <p>
-            The process starts by splitting the master key into two halves to
-            form the first pair of round keys
-          </p>
-          <p>
-            First Round Key is the left half of the master key, while the second
-            is the right half
-          </p>
+          <div>
+            <div>
+              <p>
+                The key Expansion stage involves generating a key schedule
+                consisting of <span>10</span> round keys,this process starts by
+                splitting the master key into two halves to form the first pair
+                of round keys.
+              </p>
+              <p>
+                To generate each subsequent pair of round keys, eight iterations
+                of the Feistel network are used. At each iteration, a constant
+                is applied, which is calculated by performing a linear
+                transformation of the iteration number within the algorithm.
+              </p>
+              <p>
+                So first we have to generate a 32 constants,we do that by
+                applying a linear transformation on a (16 bytes) block, where
+                all bytes are "00" except the mostright one equals to number of
+                constant
+              </p>
+            </div>
+          </div>
           <div className="container flex">
             <table>
               <caption> Constants </caption>
@@ -522,20 +536,15 @@ const Kuz = () => {
               </tbody>
             </table>
           </div>
-
-          <p>
-            we get these constants, by appling a linear transformation on a (16
-            bytes) block, where all bytes are "00" except the mostright one
-            equals to number of constant
-          </p>
           <p>
             In this transformation, each byte of the 128-bit block is multiplied
             by a fixed set of coefficients, represented as a 16-byte sequence of
             values. The multiplication is performed in the Galois field GF
             (2^8). The resulting number is written to the place of the most
             significant byte (a15) while the remaining bytes are shifted one bit
-            towards least significant bit (left).
+            towards least significant bit (right).
           </p>
+          <p>&bull;click any constant above to see how we calculate it</p>
           <div className="container flex">
             <table>
               <tr>
@@ -597,32 +606,147 @@ const Kuz = () => {
                 data={[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, iterNum]}
               />
             </div>
-            <p>
-              After we generate the constants we can now calculate the rest
-              round keys using feistelNetwork
-            </p>
+          </div>
+          <p>
+            After we have generated all the 32 constants that we need,now we can
+            calculate the rest round keys using feistelNetwork
+          </p>
+          <div className="key-exp-fn">
+            <div className="container flex ">
+              <table>
+                <caption>Round Keys</caption>
+                {result.state &&
+                  result.roundKeys.map((e, i) => {
+                    return (
+                      <tr>
+                        <th
+                          className="pointer"
+                          onClick={() => setKey(Math.floor(i / 2))}
+                        >
+                          RoundKey<sub>{i + 1}</sub>
+                        </th>
+                        {e.map((ee) => {
+                          return (
+                            <td>
+                              <span>{ee.toString(16).padStart(2, "0")}</span>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+              </table>
+            </div>
+            <img src={FN} />
           </div>
           <div className="container flex">
-            <table>
-              <caption>Round Keys</caption>
-              {result.state &&
-                result.roundKeys.map((e, i) => {
-                  return (
-                    <tr>
-                      <th>
-                        RoundKey<sub>{i + 1}</sub>
-                      </th>
-                      {e.map((ee) => {
-                        return (
-                          <td>
-                            <span>{ee.toString(16).padStart(2, "0")}</span>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
+            <p>
+              {key === 0 ? (
+                <p>
+                  We get the following pair of round keys by splitting the
+                  master key into two halves
+                </p>
+              ) : (
+                <p>
+                  We get the follwing pair of round keys by applying 8 rounds of
+                  feistel Network on the previous pair keys
+                </p>
+              )}
+            </p>
+            {result.state && (
+              <table>
+                <th>RK{key * 2 + 1}</th>
+                {result.roundKeys[key * 2].map((e) => {
+                  return <td>{e.toString(16).padStart(2, "0")}</td>;
                 })}
-            </table>
+                <th>RK{key * 2 + 2}</th>
+                {result.roundKeys[key * 2 + 1].map((e) => {
+                  return <td>{e.toString(16).padStart(2, "0")}</td>;
+                })}
+              </table>
+            )}
+            {key > 0 && <p>&bull; Choose a round</p>}
+            {key > 0 && (
+              <table>
+                <tr>
+                  {Array(8)
+                    .fill(null)
+                    .map((e, i) => {
+                      return (
+                        <th
+                          className="pointer"
+                          onClick={() => setKeyExpRound(i)}
+                        >
+                          {i + 1}
+                        </th>
+                      );
+                    })}
+                </tr>
+              </table>
+            )}
+            <br />
+            {key > 0 && (
+              <table>
+                <tr>
+                  <th className="left">Left Half</th>
+                  {keyStates(data.key)[(key - 1) * 8 + keyExpRound][0].map(
+                    (e) => {
+                      return <td>{e.toString(16).padStart(2, "0")}</td>;
+                    }
+                  )}
+                </tr>
+                <tr>
+                  <th className="left">Right Half</th>
+                  {keyStates(data.key)[(key - 1) * 8 + keyExpRound][1].map(
+                    (e) => {
+                      return <td>{e.toString(16).padStart(2, "0")}</td>;
+                    }
+                  )}
+                </tr>
+                <tr>
+                  <th className="left">
+                    Constant {(key - 1) * 8 + keyExpRound + 1}
+                  </th>
+                  {keyStates(data.key)[(key - 1) * 8 + keyExpRound][2].map(
+                    (e) => {
+                      return <td>{e.toString(16).padStart(2, "0")}</td>;
+                    }
+                  )}
+                </tr>
+                <tr>
+                  <th className="left">XOR( Left , Constant )</th>
+                  {keyStates(data.key)[(key - 1) * 8 + keyExpRound][3].map(
+                    (e) => {
+                      return <td>{e.toString(16).padStart(2, "0")}</td>;
+                    }
+                  )}
+                </tr>
+                <tr>
+                  <th className="left">Non-Linear Transformation</th>
+                  {keyStates(data.key)[(key - 1) * 8 + keyExpRound][4].map(
+                    (e) => {
+                      return <td>{e.toString(16).padStart(2, "0")}</td>;
+                    }
+                  )}
+                </tr>
+                <tr>
+                  <th className="left">Linear Transformation</th>
+                  {keyStates(data.key)[(key - 1) * 8 + keyExpRound][5].map(
+                    (e) => {
+                      return <td>{e.toString(16).padStart(2, "0")}</td>;
+                    }
+                  )}
+                </tr>
+                <tr>
+                  <th className="left">XORing with Right Half</th>
+                  {keyStates(data.key)[(key - 1) * 8 + keyExpRound][6].map(
+                    (e) => {
+                      return <td>{e.toString(16).padStart(2, "0")}</td>;
+                    }
+                  )}
+                </tr>
+              </table>
+            )}
           </div>
         </article>
 
