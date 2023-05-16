@@ -12,6 +12,12 @@ import {
   toBlocks,
 } from "../algorithms/kuzz";
 import FN from "../images/Feistel network.jpg";
+import ECBEnc from "../images/ECB_encryption.svg.png";
+import CBCEnc from "../images/CBC_encryption.svg.png";
+import ECBDec from "../images/ECB_decryption.svg.png";
+import CBCDec from "../images/CBC_decryption.svg.png";
+import EncPro from "../images/enc_proc.png";
+import DecPro from "../images/dec_proc.png";
 import KuzConst from "../components/KuzConst";
 import Ploynomial from "../components/Polynomial";
 import Box from "../components/Box";
@@ -759,7 +765,22 @@ const Kuz = () => {
             directly to encrypting each block of plaintext,Where each block
             undergoes ten rounds as follows:
           </p>
-          <p></p>
+          <div className="enc-pro-img">
+            <div className="container">
+              <p>
+                In{" "}
+                {data.mode === "ecb"
+                  ? "ECB Mode, each block of plaintext is encrypted independently using the same key "
+                  : "CBC Mode, each block of plaintext is XORed with the previous block of ciphertext before being encrypted.First Block is XORed with initialization vector (IV)  "}
+              </p>
+              <img src={data.mode === "ecb" ? ECBEnc : CBCEnc} alt="mode" />
+            </div>
+            <div className="container">
+              <p>Block Encryption</p>
+              <img src={EncPro} alt="encryption process" />
+            </div>
+          </div>
+
           <h4>Rounds 1 &rarr; 9</h4>
           <p>
             Each intermediate round in Kuznyechik encryption consists of 3
@@ -1081,6 +1102,27 @@ const Kuz = () => {
           &bull; Decryption Process
         </h3>
         <article id="kuz-decrypt">
+          <p>
+            To decrypt the text, it is necessary to apply the reverse operations
+            in reverse order:
+          </p>
+          <div className="enc-pro-img">
+            <div className="container">
+              <p>
+                In{" "}
+                {data.mode === "ecb"
+                  ? "ECB Mode, each block of plaintext is encrypted independently using the same key "
+                  : "CBC Mode, each block of plaintext is XORed with the previous block of ciphertext before being encrypted.First Block is XORed with initialization vector (IV)  "}
+              </p>
+              <img src={data.mode === "ecb" ? ECBDec : CBCDec} alt="mode" />
+            </div>
+            <div className="container">
+              <p>Block Decryption</p>
+              <img src={DecPro} alt="encryption process" />
+            </div>
+          </div>
+          <h4>Round 1</h4>
+          <h4>Rounds 2 &rarr; 10</h4>
           <Box data={reverse_Pi} value={[null, null]} />
         </article>
       </div>

@@ -107,3 +107,9 @@
 #kuz img {
   width: 100%;
 }
+
+#kuz .enc-pro-img {
+  display: grid;
+  grid-template-columns: 4fr 1fr;
+  gap: 5px;
+}

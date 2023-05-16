@@ -22,7 +22,13 @@ const Header = () => {
       )}
 
       <h3>HYBRID ENCRYPTION</h3>
-      <BsGithub className="icon right" />
+      <a
+        className="right"
+        href="https://github.com/ramisoul84/rudn-master"
+        target="_blank"
+      >
+        <BsGithub className="icon" />
+      </a>
     </header>
   );
 };

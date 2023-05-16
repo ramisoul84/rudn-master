@@ -307,6 +307,16 @@ small {
   border-radius: 5px;
   resize: none;
 }
+
+a:link,
+a:visited {
+  color: var(--color-dark);
+}
+
+a:link:active,
+a:visited:active {
+  color: var(--color-dark);
+}
 /**
  * ----------------------------------------
  * animation text-focus-in
