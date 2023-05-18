@@ -1,6 +1,6 @@
-import { linearTransformation } from "../algorithms/kuznyechik";
+import { inverseLinearTransformation } from "../algorithms/kuznyechik";
 
-const KuzConst = ({ data, index, colorIndex }) => {
+const InvKuzConst = ({ data, index, colorIndex }) => {
   return (
     <table className="flex">
       <p className="break">

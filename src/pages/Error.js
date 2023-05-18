@@ -1,4 +1,4 @@
 const Error = () => {
-  return <section id="error">404</section>;
+  return <section id="error">Error, There is no such a page</section>;
 };
 export default Error;

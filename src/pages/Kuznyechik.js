@@ -4,13 +4,14 @@ import { pkcs7 } from "../algorithms/pkcs7";
 import {
   createConstants,
   Coefficients,
-  linearTransformation,
   keyExpansion,
   keyStates,
   encryptBlock,
   encrypt,
-  toBlocks,
-} from "../algorithms/kuzz";
+  decryptBlock,
+  XOR,
+  vecToArr,
+} from "../algorithms/kuznyechik";
 import FN from "../images/Feistel network.jpg";
 import ECBEnc from "../images/ECB_encryption.svg.png";
 import CBCEnc from "../images/CBC_encryption.svg.png";
@@ -154,8 +155,10 @@ const reverse_Pi = [
     0x00, 0x4c, 0xd7, 0x74,
   ],
 ];
+const invCoefficients = Coefficients.slice();
+invCoefficients.reverse();
 const Kuz = () => {
-  // Data Parameters
+  // Input Data Parameters
   const [data, setData] = useState({
     mode: "ecb",
     key: "",
@@ -163,7 +166,7 @@ const Kuz = () => {
     plainText: "",
     plainTextHex: false,
   });
-
+  //
   const [plainTextValidity, setPlainTextValidity] = useState(false);
   const [paddedPlainText, setPaddedPlainText] = useState("");
   const [result, setResult] = useState({
@@ -189,8 +192,11 @@ const Kuz = () => {
   const [keyExpRound, setKeyExpRound] = useState(0);
   const [encryptionRound, setEncryptionRound] = useState(0);
   const [block, setBlock] = useState(0);
+  const [decRound, setDecRound] = useState(1);
+  const [blockDec, setBlockDec] = useState(0);
   const [xorOp, setXorOp] = useState(0);
   const [encNonLin, setEncNonLin] = useState([null, null]);
+  const [decNonLin, setDecNonLin] = useState([null, null]);
   // method That change data parameters  by any change in form inputs ..
   const handleChange = (event) => {
     const res = document.getElementById("kuz-res");
@@ -1085,7 +1091,7 @@ const Kuz = () => {
               </tr>
               <br />
               <tr>
-                <th className="left">{`Cipher${block}`}</th>
+                <th className="left">{`Cipher${block + 1}`}</th>
                 {result.state &&
                   result.encryptionStates[9][4].map((e) => {
                     return (
@@ -1122,8 +1128,258 @@ const Kuz = () => {
             </div>
           </div>
           <h4>Round 1</h4>
+          <div className="container flex">
+            <p>&bull; Choose a CipherText's block</p>
+            <table>
+              {result.state &&
+                result.cipher.map((e, i) => {
+                  return (
+                    <tr>
+                      <th className="pointer" onClick={() => setBlockDec(i)}>
+                        Block{i + 1}
+                      </th>
+                      {e.map((ee) => {
+                        return (
+                          <td>
+                            <span>{ee.toString(16).padStart(2, "0")}</span>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+            </table>
+
+            <br />
+            <table>
+              <tr>
+                <th className="left">Block{blockDec + 1}</th>
+                {result.state &&
+                  decryptBlock(
+                    result.cipher[blockDec],
+                    data.key
+                  ).state[0][0].map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+              </tr>
+              <tr>
+                <th className="left">RoundKey10</th>
+                {result.state &&
+                  decryptBlock(
+                    result.cipher[blockDec],
+                    data.key
+                  ).state[0][3].map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+              </tr>
+              <tr>
+                <th className="left">XORing Operation</th>
+                {result.state &&
+                  decryptBlock(
+                    result.cipher[blockDec],
+                    data.key
+                  ).state[0][4].map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+              </tr>
+            </table>
+          </div>
           <h4>Rounds 2 &rarr; 10</h4>
-          <Box data={reverse_Pi} value={[null, null]} />
+          <div className="container flex">
+            <p>&bull; Choose a round</p>
+            <table>
+              {Array(9)
+                .fill(null)
+                .map((e, i) => {
+                  return (
+                    <th className="pointer" onClick={() => setDecRound(i + 1)}>
+                      {i + 2}
+                    </th>
+                  );
+                })}
+            </table>
+            <br />
+            <table>
+              <tr>
+                <th className="left">
+                  block{blockDec + 1} after Round{decRound}
+                </th>
+                {result.state &&
+                  decryptBlock(result.cipher[blockDec], data.key).state[
+                    decRound
+                  ][0].map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+              </tr>
+              <tr>
+                <th className="left">Inverse Linear Transformation</th>
+                {result.state &&
+                  decryptBlock(result.cipher[blockDec], data.key).state[
+                    decRound
+                  ][1].map((e) => {
+                    return (
+                      <td
+                        className="pointer"
+                        onClick={(e) => {
+                          setDecNonLin([
+                            parseInt(
+                              e && e.target.innerText.substring(0, 1),
+                              16
+                            ),
+                            parseInt(
+                              e && e.target.innerText.substring(1, 2),
+                              16
+                            ),
+                          ]);
+                        }}
+                      >
+                        {e.toString(16).padStart(2, "0")}
+                      </td>
+                    );
+                  })}
+              </tr>
+              <tr>
+                <th className="left">Inverse Non-Linear Transformation</th>
+                {result.state &&
+                  decryptBlock(result.cipher[blockDec], data.key).state[
+                    decRound
+                  ][2].map((e, i) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+              </tr>
+              <tr>
+                <th className="left">KeyRound{10 - decRound}</th>
+                {result.state &&
+                  decryptBlock(result.cipher[blockDec], data.key).state[
+                    decRound
+                  ][3].map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+              </tr>
+              <tr>
+                <th className="left">XORing</th>
+                {result.state &&
+                  decryptBlock(result.cipher[blockDec], data.key).state[
+                    decRound
+                  ][4].map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+              </tr>
+              <br />
+              {decRound === 9 && (
+                <tr>
+                  <th className="left">
+                    {data.mode === "ecb"
+                      ? `PlainText${blockDec + 1}`
+                      : `block${blockDec + 1} after Round${decRound + 1}`}
+                  </th>
+                  {result.state &&
+                    decryptBlock(result.cipher[blockDec], data.key).state[
+                      decRound
+                    ][4].map((e) => {
+                      return <td>{e.toString(16).padStart(2, "0")}</td>;
+                    })}
+                </tr>
+              )}
+
+              {decRound === 9 && data.mode === "cbc" && (
+                <tr>
+                  <th className="left">
+                    {blockDec === 0 ? `IV` : `Block${blockDec}`}
+                  </th>
+                  {blockDec === 0
+                    ? vecToArr(data.iv).map((e) => {
+                        return <td>{e.toString(16).padStart(2, "0")}</td>;
+                      })
+                    : result.cipher[blockDec - 1].map((e) => {
+                        return <td>{e.toString(16).padStart(2, "0")}</td>;
+                      })}
+                </tr>
+              )}
+              {decRound === 9 && data.mode === "cbc" && result.state && (
+                <tr>
+                  <th className="left">
+                    XORing with {blockDec === 0 ? `IV` : `Block${blockDec}`}
+                  </th>
+                  {XOR(
+                    decryptBlock(result.cipher[blockDec], data.key).state[9][4],
+                    vecToArr(data.iv)
+                  ).dec.map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+                </tr>
+              )}
+              <br />
+              {decRound === 9 && data.mode === "cbc" && result.state && (
+                <tr>
+                  <th className="left">PlainText{blockDec + 1}</th>
+                  {XOR(
+                    decryptBlock(result.cipher[blockDec], data.key).state[9][4],
+                    blockDec === 0
+                      ? vecToArr(data.iv)
+                      : result.cipher[blockDec - 1]
+                  ).dec.map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+                </tr>
+              )}
+            </table>
+            <p>
+              &bull; Press a Byte from an Inverse Linear Transformation result
+              above to see details
+            </p>
+            <table>
+              <caption>Inverse Linear Transformation</caption>
+              <tr>
+                <th className="left">
+                  Input <small>Hexadecimal</small>
+                </th>
+                {result.state &&
+                  decryptBlock(result.cipher[blockDec], data.key).state[
+                    decRound
+                  ][0].map((e) => {
+                    return <td>{e.toString(16).padStart(2, "0")}</td>;
+                  })}
+              </tr>
+              <tr>
+                <th className="left">
+                  Input <small>Decimal</small>
+                </th>
+                {result.state &&
+                  decryptBlock(result.cipher[blockDec], data.key).state[
+                    decRound
+                  ][0].map((e) => {
+                    return <td>{e}</td>;
+                  })}
+              </tr>
+              <tr>
+                <th className="left">Coefficients </th>
+                {invCoefficients.map((e, i) => {
+                  return <td>{e}</td>;
+                })}
+              </tr>
+            </table>
+
+            <Box
+              data={reverse_Pi}
+              value={decNonLin}
+              caption={"Inverse Non-Linear Transformation"}
+            />
+          </div>
+          <div className="container">
+            Full PlainText
+            <p className="break">
+              {result.state &&
+                paddedPlainText.map((e) => {
+                  return <>{e.toString(16).padStart(2, "0")}</>;
+                })}
+            </p>
+            <p>
+              value in last Byte determines the number of padded bytes ={" "}
+              {paddedPlainText.slice(-1)}, we delete them, and we get the real
+              plainText
+            </p>
+          </div>
         </article>
       </div>
     </section>

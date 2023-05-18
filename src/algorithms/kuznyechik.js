@@ -142,7 +142,6 @@ const inverseLinearTransformation = (block) => {
   dec.map((e, i) => {
     return (hex[i] = e.toString(16).padStart(2, "0"));
   });
-  console.log(hex);
   return { dec, hex };
 };
 // Обратное преобразование R
@@ -184,7 +183,6 @@ const lTransformationReverse = (input) => {
   state.map((e, i) => {
     return (hex[i] = e.toString(16).padStart(2, "0"));
   });
-  console.log(hex);
   return state;
 };
 
@@ -314,9 +312,7 @@ const keyExpansion = (key) => {
 };
 const keyStates = (key) => {
   const constants = createConstants().constantsDec;
-  console.log(key);
   key = vecToArr(key);
-  console.log(key);
   const states = Array(32);
   states[0] = Array(7);
   states[0][0] = key.slice(0, 16);
@@ -336,12 +332,10 @@ const keyStates = (key) => {
     states[i][5] = linearTransformation(states[i][4]).dec;
     states[i][6] = XOR(states[i][5], states[i][1]).dec;
   }
-  console.log(states);
   return states;
 };
 //
 const encryptBlock = (block, key) => {
-  console.log("block", block);
   const roundKey = keyExpansion(key);
   const state = Array(10).fill(null);
   let cipher = block.slice();
@@ -354,7 +348,6 @@ const encryptBlock = (block, key) => {
       state[i][4] = cipher.slice();
     } else {
       //console.log("R", roundKey[i]);
-
       cipher = XOR(cipher, roundKey[i]).dec;
       state[i][1] = roundKey[i].slice();
       state[i][2] = cipher.slice();
@@ -378,17 +371,10 @@ const encrypt = (plainText, key, mode, iv) => {
       ? key
       : "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef";
   iv = iv.length === 32 ? iv : "6ea276726c487ab85d27bd10dd849401";
-  console.log("PlainText", plainText);
-  console.log("Key=", key);
-  console.log(mode);
-  console.log(iv);
   const numberOfBlocks = plainText.length / 16;
-  console.log(numberOfBlocks);
   const CipherText = Array(numberOfBlocks);
   const ivArr = vecToArr(iv);
-  console.log("IV=", ivArr);
   let states = Array(numberOfBlocks).fill(null);
-
   let input =
     mode === "ecb"
       ? plainText.slice(0, 16)
@@ -398,7 +384,6 @@ const encrypt = (plainText, key, mode, iv) => {
     if (i === 0) {
       CipherText[i] = encryptBlock(input, key).cipher;
       states[i][0] = plainText.slice(0, 16);
-
       states[i][1] = input;
       states[i][2] = CipherText[i];
     } else {
@@ -434,6 +419,61 @@ const encrypt = (plainText, key, mode, iv) => {
   return { CipherText, states };
 };
 
+const decryptBlock = (block, key) => {
+  const roundKey = keyExpansion(key);
+  const state = Array(10).fill(null);
+  let plainText = block.slice();
+  for (let i = 0; i < 10; i++) {
+    state[i] = Array(5).fill(null);
+    state[i][0] = plainText.slice();
+    if (i === 0) {
+      plainText = XOR(plainText, roundKey[9 - i]).dec;
+      state[i][3] = roundKey[9 - i].slice();
+      state[i][4] = plainText.slice();
+    } else {
+      //console.log("R", roundKey[i]);
+      state[i][0] = plainText.slice();
+      plainText = inverseLinearTransformation(plainText).dec;
+      state[i][1] = plainText.slice();
+      plainText = inverseSubBytes(plainText).dec;
+      state[i][2] = plainText.slice();
+      state[i][3] = roundKey[9 - i].slice();
+      plainText = XOR(state[i][2], state[i][3]).dec;
+      state[i][4] = plainText.slice();
+    }
+  }
+  return { plainText, state };
+};
+
+const decrypt = (cipher, key, mode, iv) => {
+  key =
+    key.length === 64
+      ? key
+      : "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef";
+  iv = iv.length === 32 ? iv : "6ea276726c487ab85d27bd10dd849401";
+  const numberOfBlocks = cipher.length / 16;
+  const roundKey = keyExpansion(key);
+  const plainText = Array(numberOfBlocks);
+  const ivArr = vecToArr(iv);
+  let states = Array(numberOfBlocks).fill(null);
+  for (let i = 0; i < numberOfBlocks; i++) {
+    states[i] = Array(3).fill(null);
+    if (i === 0) {
+      states[i][0] = cipher.slice(i * 16, i * 16 + 16);
+      states[i][1] = decryptBlock(states[i][0], key);
+      states[i][2] = mode === "ecb" ? states[i][1] : XOR(states[i][1], ivArr);
+      plainText[i] = states[i][2];
+    } else {
+      states[i][0] = cipher.slice(i * 16, i * 16 + 16);
+      states[i][1] = decryptBlock(states[i][0], key);
+      states[i][2] =
+        mode === "ecb" ? states[i][1] : XOR(states[i][1], states[i - 1][2]);
+    }
+    plainText[i] = states[i][2];
+  }
+  return { plainText, states };
+};
+
 export {
   createConstants,
   Coefficients,
@@ -443,18 +483,21 @@ export {
   keyStates,
   encryptBlock,
   encrypt,
+  decrypt,
+  decryptBlock,
   toBlocks,
   Pi,
+  XOR,
+  vecToArr,
+  inverseLinearTransformation,
 };
 
 //createConstants();
 //subBytes(vecToArr("0c3322fed531e4630d80ef5c5a81c50b"));
 let key1 = "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdefaa";
-let k1 = "c3d5fa01ebe36f7a9374427ad7ca89498899aabbccddeeff0011223344556677";
+let k1 = "1e726c61fd32e420ea09917c103231be03c04fc51a1e5e3a4fef739e9563aa99";
 const key = vecToArr(key1);
-const plainText = vecToArr(
-  "c3d5fa01ebe36f7a9374427ad7ca89498899aabbccddeeff0011223344556677"
-);
+const plainText = vecToArr("7f679d90bebc24305a468d42b9d4edcd");
 //vecToArr("6ea276726c487ab85d27bd10dd849401");
 //constants = createConstants().constantsDec;
 //feistelNetwork(vecToArr(k1), constants[1]);
@@ -469,4 +512,5 @@ const plainText = vecToArr(
 //linearTransformation([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 //inverseLinearTransformation(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));
 //lTransformationReverse(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));
-keyStates(key1);
+//keyStates(key1);
+decryptBlock(plainText, key1);

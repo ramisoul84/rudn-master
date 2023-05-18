@@ -3,7 +3,7 @@ import Root from "./components/Root";
 import Error from "./pages/Error";
 import Intro from "./pages/Intro";
 import Home from "./pages/Home";
-import Kuz from "./pages/Kuz";
+import Kuz from "./pages/Kuznyechik";
 import AES from "./pages/AES";
 import ECC from "./pages/ECC";
 import SHA from "./pages/SHA";

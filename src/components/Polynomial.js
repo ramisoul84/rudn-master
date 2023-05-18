@@ -1,4 +1,7 @@
-import { linearTransformation, galoisMultiplication } from "../algorithms/kuzz";
+import {
+  linearTransformation,
+  galoisMultiplication,
+} from "../algorithms/kuznyechik";
 
 const Ploynomial = ({ data }) => {
   const res = linearTransformation(data).calc[15];
