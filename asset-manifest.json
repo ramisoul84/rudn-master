@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/rudn-master/static/css/main.2beea92d.css",
-    "main.js": "/rudn-master/static/js/main.45f0571e.js",
+    "main.js": "/rudn-master/static/js/main.e9da5cd9.js",
     "static/media/Bob.png": "/rudn-master/static/media/Bob.fcf0a20814441f0b7056.png",
     "static/media/Alice.png": "/rudn-master/static/media/Alice.9e73b8e60eefc8d546e7.png",
     "static/media/ECB_encryption.svg.png": "/rudn-master/static/media/ECB_encryption.svg.d517542ac4a7fc40a71e.png",
@@ -14,10 +14,10 @@
     "static/media/CBC_encryption.svg.png": "/rudn-master/static/media/CBC_encryption.svg.0d0ce6db3d7dbdfdfce9.png",
     "index.html": "/rudn-master/index.html",
     "main.2beea92d.css.map": "/rudn-master/static/css/main.2beea92d.css.map",
-    "main.45f0571e.js.map": "/rudn-master/static/js/main.45f0571e.js.map"
+    "main.e9da5cd9.js.map": "/rudn-master/static/js/main.e9da5cd9.js.map"
   },
   "entrypoints": [
     "static/css/main.2beea92d.css",
-    "static/js/main.45f0571e.js"
+    "static/js/main.e9da5cd9.js"
   ]
 }
