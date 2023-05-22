@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { textToUtf8, decToBase64 } from "../algorithms/encode";
-import { pkcs7 } from "../algorithms/pkcs7";
+import { pkcs7, textToUtf8, decToBase64 } from "../algorithms/auxiliary";
 import {
   createConstants,
   Coefficients,
@@ -20,7 +19,9 @@ import CBCDec from "../images/CBC_decryption.svg.png";
 import EncPro from "../images/enc_proc.png";
 import DecPro from "../images/dec_proc.png";
 import KuzConst from "../components/KuzConst";
+import InvKuzConst from "../components/InvKuzConst";
 import Ploynomial from "../components/Polynomial";
+import InvPloynomial from "../components/InvPolynomial";
 import Box from "../components/Box";
 import "./kuz.css";
 const Pi = [
@@ -552,9 +553,9 @@ const Kuz = () => {
             In this transformation, each byte of the 128-bit block is multiplied
             by a fixed set of coefficients, represented as a 16-byte sequence of
             values. The multiplication is performed in the Galois field GF
-            (2^8). The resulting number is written to the place of the most
-            significant byte (a15) while the remaining bytes are shifted one bit
-            towards least significant bit (right).
+            (2^8). The resulting number is written to the place of the mostleft
+            byte (a15) while the remaining bytes are shifted one byte towards
+            right.
           </p>
           <p>&bull;click any constant above to see how we calculate it</p>
           <div className="container flex">
@@ -613,7 +614,7 @@ const Kuz = () => {
                     />
                   );
                 })}
-              <p>Last Multiplication as follows: </p>
+              <p>And here is an explanation of last line multiplication: </p>
               <Ploynomial
                 data={[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, iterNum]}
               />
@@ -652,6 +653,7 @@ const Kuz = () => {
             <img src={FN} />
           </div>
           <div className="container flex">
+            <p>&bull; Click a RoundKey above</p>
             <p>
               {key === 0 ? (
                 <p>
@@ -1117,8 +1119,8 @@ const Kuz = () => {
               <p>
                 In{" "}
                 {data.mode === "ecb"
-                  ? "ECB Mode, each block of plaintext is encrypted independently using the same key "
-                  : "CBC Mode, each block of plaintext is XORed with the previous block of ciphertext before being encrypted.First Block is XORed with initialization vector (IV)  "}
+                  ? "ECB Mode, each block of cipherText is decrypted independently using the same key "
+                  : "CBC Mode, after decrypting  each block of CipherText, the result  is XORed with the previous block of ciphertext,in case it is the First Block, the result  is XORed with initialization vector (IV)  "}
               </p>
               <img src={data.mode === "ecb" ? ECBDec : CBCDec} alt="mode" />
             </div>
@@ -1359,7 +1361,34 @@ const Kuz = () => {
                 })}
               </tr>
             </table>
-
+            <div className="flex">
+              {result.state &&
+                Array(16)
+                  .fill(null)
+                  .map((e, i) => {
+                    return (
+                      <InvKuzConst
+                        data={
+                          decryptBlock(result.cipher[blockDec], data.key).state[
+                            decRound
+                          ][0]
+                        }
+                        index={i}
+                        colorIndex={14 - i}
+                      />
+                    );
+                  })}
+              <p>Last Multiplication as follows: </p>
+              {result.state && (
+                <InvPloynomial
+                  data={
+                    decryptBlock(result.cipher[blockDec], data.key).state[
+                      decRound
+                    ][0]
+                  }
+                />
+              )}
+            </div>
             <Box
               data={reverse_Pi}
               value={decNonLin}
@@ -1367,7 +1396,8 @@ const Kuz = () => {
             />
           </div>
           <div className="container">
-            Full PlainText
+            By concatenating all decrypt blocks, we get the whole
+            plainText,which still contains padded bytes
             <p className="break">
               {result.state &&
                 paddedPlainText.map((e) => {

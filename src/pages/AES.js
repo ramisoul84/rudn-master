@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { textToUtf8, hexToBase64 } from "../algorithms/encode";
-import { pkcs7 } from "../algorithms/pkcs7";
+import { pkcs7, textToUtf8 } from "../algorithms/auxiliary";
 import {
   sBox,
   invSBox,

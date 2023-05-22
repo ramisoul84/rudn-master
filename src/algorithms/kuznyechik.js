@@ -127,10 +127,14 @@ const inverseLinearTransformation = (block) => {
   // result block in hex
   let hex = Array(16).fill(null);
   // intermediate states
+  let calc = Array(16);
   for (let j = 0; j < 16; j++) {
+    calc[j] = Array(48);
     aLast = 0;
     for (let i = 0; i < 16; i++) {
       aLast ^= galoisMultiplication(block[i], Coefficients[15 - i]).dec;
+      calc[j][2 * i] = block[i];
+      calc[j][2 * i + 1] = Coefficients[15 - i];
     }
     for (let i = 0; i < 15; i++) {
       dec[i] = block[i + 1];
@@ -138,52 +142,15 @@ const inverseLinearTransformation = (block) => {
 
     dec[15] = aLast;
     block = dec;
+    for (let i = 32; i < 48; i++) {
+      calc[j][i] = block[i - 32];
+    }
   }
+
   dec.map((e, i) => {
     return (hex[i] = e.toString(16).padStart(2, "0"));
   });
-  return { dec, hex };
-};
-// Обратное преобразование R
-const rTransformationReverse1 = (input) => {
-  let aLast = input[0];
-  let state = Array(16);
-  for (let i = 0; i < 16; i++) {
-    state[i] = input[i + 1];
-  }
-  for (let i = 14; i >= 0; i--) {
-    aLast ^= galoisMultiplication(state[i], Coefficients[i]).dec;
-  }
-  state[15] = aLast;
-  console.log(state);
-  return state;
-};
-const rTransformationReverse = (input) => {
-  let aLast = 0;
-  let state = Array(16);
-
-  for (let i = 0; i < 16; i++) {
-    aLast ^= galoisMultiplication(input[i], Coefficients[16 - i]).dec;
-  }
-  for (let i = 0; i < 15; i++) {
-    state[i] = input[i + 1];
-  }
-  state[15] = aLast;
-  console.log(state);
-  return state;
-};
-
-// Обратное линейное преобразование (преобразование L)
-const lTransformationReverse = (input) => {
-  let hex = Array(16).fill(null);
-  var state = input;
-  for (let i = 0; i < 16; i++) {
-    state = rTransformationReverse(state);
-  }
-  state.map((e, i) => {
-    return (hex[i] = e.toString(16).padStart(2, "0"));
-  });
-  return state;
+  return { dec, hex, calc };
 };
 
 // Non-Linear Transformation S
@@ -264,19 +231,6 @@ const createConstants = () => {
 const feistelNetwork = (key, constant) => {
   let L = key.slice(0, 16);
   let R = key.slice(16, 32);
-  /*
-  console.log(
-    "key1=",
-    L.map((e) => {
-      return e.toString(16);
-    })
-  );
-  console.log(
-    "key2=",
-    R.map((e) => {
-      return e.toString(16);
-    })
-  );*/
   let temp = Array(16);
   let tempKey = Array(32);
   temp = XOR(L, constant);
@@ -513,4 +467,4 @@ const plainText = vecToArr("7f679d90bebc24305a468d42b9d4edcd");
 //inverseLinearTransformation(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));
 //lTransformationReverse(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));
 //keyStates(key1);
-decryptBlock(plainText, key1);
+//decryptBlock(plainText, key1);

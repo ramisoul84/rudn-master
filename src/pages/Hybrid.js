@@ -82,8 +82,9 @@ const Hybrid = () => {
             <option value="p384">p384</option>
             <option value="p521">p521</option>
           </select>
-          <label>AES-Version</label>
+          <label>Symmetric Encryption</label>
           <select id="aes" name="aes" onChange={handleChange}>
+            <option value="kuznyechik">Kuznyechik</option>
             <option value="aes128">AES-128</option>
             <option value="aes192">AES-192</option>
             <option value="aes256">AES-256</option>

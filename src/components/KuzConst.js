@@ -37,7 +37,7 @@ const KuzConst = ({ data, index, colorIndex }) => {
                 <td
                   style={
                     i === 0
-                      ? { color: "red" }
+                      ? { color: "red", fontWeight: "600" }
                       : i === colorIndex
                       ? { backgroundColor: "lightgreen" }
                       : null

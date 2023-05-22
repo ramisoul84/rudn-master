@@ -1,4 +1,4 @@
-import { validation } from "./validation";
+import { validation } from "./auxiliary";
 // Rijndael (S-box)
 const sBox = [
   [

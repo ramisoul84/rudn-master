@@ -307,7 +307,9 @@ small {
   border-radius: 5px;
   resize: none;
 }
-
+#utf8-result {
+  display: none;
+}
 a:link,
 a:visited {
   color: var(--color-dark);

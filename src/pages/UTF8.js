@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { textToUtf8, charToUtf8 } from "../algorithms/encode";
+import { textToUtf8, charToUtf8 } from "../algorithms/auxiliary";
 const UTF8 = () => {
   const [data, setData] = useState("");
   const handleChange = (event) => {

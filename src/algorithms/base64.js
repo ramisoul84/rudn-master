@@ -16,13 +16,14 @@ const hexToBase64 = (hex) => {
   for (let i = 0; i < base64Length - 1; i++) {
     base64Hex[i] = String.fromCharCode(33);
   }
-
+  /*
   console.log("Bin=", bin);
   console.log("Bin=", base64Bin.join(""));
   console.log("BinL=", bin.length);
   console.log("B64L=", base64Length);
   console.log("B64=", base64Bin);
   console.log("B64=", base64Hex);
+  */
 };
 
 const hex = "308705e8245041c62e2504aa28833373d9d5de3416022735fa1e39ad5ac6261b";
