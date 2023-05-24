@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { pkcs7, textToUtf8 } from "../algorithms/auxiliary";
 import {
   sBox,
@@ -264,9 +263,6 @@ const AES = () => {
             <span className="break">
               {textToUtf8(result.key).encodedTextHex}
             </span>
-            <Link to={"/rudn-master/utf8"} target="_blanck">
-              utf8
-            </Link>
           </div>
           <p>
             After that we use <strong>PKCS#7</strong> (Public Key Cryptography

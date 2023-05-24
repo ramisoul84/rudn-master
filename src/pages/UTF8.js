@@ -1,14 +1,44 @@
-import { useState } from "react";
-import { textToUtf8, charToUtf8 } from "../algorithms/auxiliary";
+import { useState, useEffect } from "react";
+import { textToUtf8, charToUtf8, utf8ToText } from "../algorithms/auxiliary";
 const UTF8 = () => {
   const [data, setData] = useState("");
+  const [dataDec, setDataDec] = useState("");
+  const [validity, setValidity] = useState(false);
   const handleChange = (event) => {
     setData(event.target.value);
     const result = document.getElementById("utf8-result");
     result.style.display = "none";
   };
+  const handleChangeDec = (event) => {
+    setDataDec(event.target.value);
+    const result = document.getElementById("utf8-result-Dec");
+    result.style.display = "none";
+  };
+  const inputValidity = () => {
+    const textDec = document.getElementById("textDec");
+    const regex = /^[0-9A-Fa-f]+$/g;
+    setValidity(
+      textDec.checkValidity() && regex.test(dataDec) && dataDec.length % 2 === 0
+    );
+  };
+
+  const decDis = () => {
+    const dec = document.getElementById("submitDecode");
+    if (validity) {
+      dec.disabled = false;
+    } else {
+      dec.disabled = true;
+    }
+  };
+  useEffect(inputValidity, [dataDec]);
+  useEffect(decDis);
   const handleSubmit = (event) => {
     const result = document.getElementById("utf8-result");
+    result.style.display = "block";
+    event.preventDefault();
+  };
+  const handleSubmitDec = (event) => {
+    const result = document.getElementById("utf8-result-Dec");
     result.style.display = "block";
     event.preventDefault();
   };
@@ -140,7 +170,9 @@ const UTF8 = () => {
         <input type="submit" value="Encode" disabled={data ? false : true} />
       </form>
       <div className="container flex" id="utf8-result">
-        {data[0] && <span>{textToUtf8(data).encodedTextHex}</span>}
+        {data[0] && (
+          <span className="break">{textToUtf8(data).encodedTextHex}</span>
+        )}
         {data.split("").map((e, i) => {
           return e && i < 3 ? (
             <>
@@ -289,6 +321,26 @@ const UTF8 = () => {
             </>
           ) : null;
         })}
+      </div>
+      <form className="flex" onSubmit={handleSubmitDec}>
+        <label htmlFor="text">Text:</label>
+        <textarea
+          type="text"
+          name="text"
+          id="textDec"
+          placeholder={"Enter a hexadecimal "}
+          onChange={handleChangeDec}
+        />
+        <input
+          type="submit"
+          id="submitDecode"
+          value="Decode"
+          required
+          disabled={dataDec ? false : true}
+        />
+      </form>
+      <div id="utf8-result-Dec" className="container">
+        {dataDec && utf8ToText(dataDec)}
       </div>
     </section>
   );

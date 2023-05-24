@@ -307,7 +307,8 @@ small {
   border-radius: 5px;
   resize: none;
 }
-#utf8-result {
+#utf8-result,
+#utf8-result-Dec {
   display: none;
 }
 a:link,

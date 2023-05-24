@@ -100,9 +100,15 @@ const textToUtf8 = (text) => {
   // textToUtf8("Hello").encodedTextBin ---> "0100100001100101011011000110110001101111"
 };
 
+const regex = /^[0-9A-Fa-f]+$/g;
 // Decode a Text Using UTF-8
-const utf8ToText = (bin) => {
-  console.log(bin);
+const utf8ToText = (hex) => {
+  let bin = "";
+  for (let i = 0; i < hex.length / 2; i++) {
+    bin += parseInt(hex.substring(i * 2, i * 2 + 2), 16)
+      .toString(2)
+      .padStart(8, "0");
+  }
   let temp = Array();
   let dec = Array();
   let text = "";
@@ -110,22 +116,28 @@ const utf8ToText = (bin) => {
     if (bin[i] === "0") {
       temp.push(bin.substring(i, i + 8));
       i = i + 8;
-    } else if (bin[i] === "1" && bin[i + 1] === "1" && bin[i + 2] === "0") {
+    } else if (
+      bin[i] === "1" &&
+      bin[i + 1] === "1" &&
+      bin[i + 2] === "0" &&
+      bin[i + 15]
+    ) {
       temp.push(bin.substring(i, i + 16));
       i = i + 16;
     } else if (
       bin[i] === "1" &&
       bin[i + 1] === "1" &&
       bin[i + 2] === "1" &&
-      bin[i + 3] === "0"
+      bin[i + 3] === "0" &&
+      bin[i + 23]
     ) {
       temp.push(bin.substring(i, i + 24));
-      i = i + 16;
+      i = i + 24;
     } else {
-      console.log("UnValid Format");
-      return;
+      return "Unvalid UTF8 Format";
     }
   }
+
   temp.map((e) => {
     return dec.push(
       e.length === 8
@@ -136,9 +148,9 @@ const utf8ToText = (bin) => {
   for (let i = 0; i < dec.length; i++) {
     text += String.fromCharCode(dec[i]);
   }
-  console.log(text);
+  console.log(regex.test(hex));
   return text;
-  // utf8ToText("0100100001100101011011000110110001101111") => Hello
+  // utf8ToText("68656c6c6f") => Hello
 };
 
 // Base64 lookup table
@@ -231,7 +243,7 @@ const validation = (plainText, key, version) => {
   const paddedKeyBin = paddedKeyHex.map((e) => {
     return parseInt(e, 16).toString(2).padStart(8, "0");
   });
-  const validKey = utf8ToText(paddedKeyBin.flat().join(""));
+  const validKey = utf8ToText(paddedKeyHex.join(""));
   return {
     validPlainText,
     validKey,
@@ -267,3 +279,5 @@ export {
   txtToDec,
   binToDec,
 };
+
+console.log(pkcs7(textToUtf8("пр").encodedTextHex, 16).appendedPlaintextHex);

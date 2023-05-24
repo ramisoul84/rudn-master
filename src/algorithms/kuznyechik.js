@@ -324,7 +324,8 @@ const encrypt = (plainText, key, mode, iv) => {
     key.length === 64
       ? key
       : "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef";
-  iv = iv.length === 32 ? iv : "6ea276726c487ab85d27bd10dd849401";
+  iv = iv && iv.length === 32 ? iv : "6ea276726c487ab85d27bd10dd849401";
+
   const numberOfBlocks = plainText.length / 16;
   const CipherText = Array(numberOfBlocks);
   const ivArr = vecToArr(iv);
@@ -360,20 +361,19 @@ const encrypt = (plainText, key, mode, iv) => {
         states[i][2] = CipherText[i];
       }
     }
-    /*
-    i === 0
-      ? (CipherText[i] = encryptBlock(input, key).cipher)
-      : mode === "ecb"
-      ? (CipherText[i] = encryptBlock(
-          plainText.slice(i * 16, i * 16 + 16),
-          key
-        ).cipher)
-      : (CipherText[i] = encryptBlock(CipherText[i - 1], key).cipher);*/
   }
-  return { CipherText, states };
+  let cipherHex = Array();
+  CipherText.map((e) => {
+    e.map((ee) => {
+      cipherHex.push(ee.toString(16).padStart(2, "0"));
+    });
+  });
+  return { CipherText, states, cipherHex };
 };
 
 const decryptBlock = (block, key) => {
+  console.log(block);
+  console.log(key);
   const roundKey = keyExpansion(key);
   const state = Array(10).fill(null);
   let plainText = block.slice();
@@ -396,6 +396,8 @@ const decryptBlock = (block, key) => {
       state[i][4] = plainText.slice();
     }
   }
+  console.log(plainText);
+  console.log(state[9][4]);
   return { plainText, state };
 };
 
@@ -404,28 +406,44 @@ const decrypt = (cipher, key, mode, iv) => {
     key.length === 64
       ? key
       : "8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef";
-  iv = iv.length === 32 ? iv : "6ea276726c487ab85d27bd10dd849401";
+  iv = iv && iv.length === 32 ? iv : "6ea276726c487ab85d27bd10dd849401";
+
+  console.log("cipher", cipher.length);
+  console.log("key", key.length);
+  console.log("mode", mode);
   const numberOfBlocks = cipher.length / 16;
+  console.log("numberOfBlocks", numberOfBlocks);
   const roundKey = keyExpansion(key);
   const plainText = Array(numberOfBlocks);
+  if (cipher.length % 16 !== 0) {
+    return;
+  }
   const ivArr = vecToArr(iv);
   let states = Array(numberOfBlocks).fill(null);
   for (let i = 0; i < numberOfBlocks; i++) {
     states[i] = Array(3).fill(null);
     if (i === 0) {
       states[i][0] = cipher.slice(i * 16, i * 16 + 16);
-      states[i][1] = decryptBlock(states[i][0], key);
-      states[i][2] = mode === "ecb" ? states[i][1] : XOR(states[i][1], ivArr);
+      states[i][1] = decryptBlock(states[i][0], key).plainText;
+      states[i][2] =
+        mode === "ecb" ? states[i][1] : XOR(states[i][1], ivArr).dec;
       plainText[i] = states[i][2];
     } else {
       states[i][0] = cipher.slice(i * 16, i * 16 + 16);
-      states[i][1] = decryptBlock(states[i][0], key);
+      states[i][1] = decryptBlock(states[i][0], key).plainText;
       states[i][2] =
-        mode === "ecb" ? states[i][1] : XOR(states[i][1], states[i - 1][2]);
+        mode === "ecb" ? states[i][1] : XOR(states[i][1], states[i - 1][2]).dec;
     }
     plainText[i] = states[i][2];
   }
-  return { plainText, states };
+  let plainHex = Array();
+  plainText.map((e) => {
+    e.map((ee) => {
+      plainHex.push(ee.toString(16).padStart(2, "0"));
+    });
+  });
+  console.log("pl", plainText);
+  return { plainText, plainHex, states };
 };
 
 export {
@@ -458,7 +476,6 @@ const plainText = vecToArr("7f679d90bebc24305a468d42b9d4edcd");
 //subBytes(vecToArr("e63bdcc9a09594475d369f2399d1f276"));
 //keyExpansion(key1);
 
-//encrypt(plainText, key);
 //linearTransformation([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
 //encryptBlock(plainText, key1);
@@ -468,3 +485,7 @@ const plainText = vecToArr("7f679d90bebc24305a468d42b9d4edcd");
 //lTransformationReverse(vecToArr("0d8e40e4a800d06b2f1b37ea379ead8e"));
 //keyStates(key1);
 //decryptBlock(plainText, key1);
+decrypt(
+  "679771954d0f0a7478449ff7118986227b92ecca309723ba850749cb8a7a44fe8c5b835d4d469b97ab38661e46fca048",
+  "465854e07241eaa0da91f56efb046f7619d0eff7c426629d43eb714d45ecc12a"
+);

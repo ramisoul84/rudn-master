@@ -3,11 +3,13 @@ import { ec } from "elliptic";
 import Alice from "../images/Alice.png";
 import Bob from "../images/Bob.png";
 import crypto from "crypto-js";
+import { pkcs7, textToUtf8, utf8ToText } from "../algorithms/auxiliary";
+import { encrypt, decrypt, vecToArr } from "../algorithms/kuznyechik";
 const Hybrid = () => {
   const [method, setMethod] = useState({
     curve: "secp256k1",
-    aes: "aes128",
-    mode: "ecb",
+    algo: "kuznyechik",
+    // mode: "ecb",
   });
   const [usedCurve, setUsedCurve] = useState(new ec("secp256k1"));
   const [alicePrivate, setAlicePrivate] = useState("");
@@ -18,6 +20,9 @@ const Hybrid = () => {
   const [bobPublic, setBobPublic] = useState("");
   const [bobShared, setBobShared] = useState("");
   const [bobHashed, setBobHashed] = useState("");
+  const [alicePlainText, setAlicePlainText] = useState("");
+  const [bobCipherText, setBobCipherText] = useState("");
+
   const handleChange = (e) => {
     const hybrid = document.getElementById("hybrid-conf");
     hybrid.style.display = "none";
@@ -83,17 +88,19 @@ const Hybrid = () => {
             <option value="p521">p521</option>
           </select>
           <label>Symmetric Encryption</label>
-          <select id="aes" name="aes" onChange={handleChange}>
-            <option value="kuznyechik">Kuznyechik</option>
-            <option value="aes128">AES-128</option>
+          <select id="algo" name="algo" onChange={handleChange}>
+            {/* <option value="aes128">AES-128</option>
             <option value="aes192">AES-192</option>
-            <option value="aes256">AES-256</option>
+            <option value="aes256">AES-256</option> */}
+
+            <option value="kuznyechik">Kuznyechik</option>
           </select>
-          <label>Mode</label>
+          {/*  <label>Mode</label>
           <select id="mode" name="mode" onChange={handleChange}>
             <option value="ecb">ECB</option>
             <option value="cbc">CBC</option>
-          </select>
+          </select> */}
+
           <input type="submit" value={"Confirm"} />
         </form>
       </fieldset>
@@ -217,7 +224,7 @@ const Hybrid = () => {
             </fieldset>
             <fieldset>
               <legend>
-                Secret Key <small>({method.aes.toUpperCase()})</small>
+                Secret Key <small>({method.algo.toUpperCase()})</small>
               </legend>
               <p className="break pad5">
                 {aliceHashed
@@ -225,9 +232,9 @@ const Hybrid = () => {
                   .toUpperCase()
                   .slice(
                     0,
-                    method.aes === "aes128"
+                    method.algo === "aes128"
                       ? 32
-                      : method.aes === "aes192"
+                      : method.algo === "aes192"
                       ? 48
                       : 64
                   )}
@@ -236,11 +243,64 @@ const Hybrid = () => {
             <br />
             <form className="flex">
               <label>Secret Key</label>
-              <input type="text" disabled />
+              <input
+                type="text"
+                name="key"
+                value={aliceHashed
+                  .toString()
+                  .toUpperCase()
+                  .slice(
+                    0,
+                    method.algo === "aes128"
+                      ? 32
+                      : method.algo === "aes192"
+                      ? 48
+                      : 64
+                  )}
+                placeholder={aliceHashed
+                  .toString()
+                  .toUpperCase()
+                  .slice(
+                    0,
+                    method.algo === "aes128"
+                      ? 32
+                      : method.algo === "aes192"
+                      ? 48
+                      : 64
+                  )}
+                readOnly
+              />
               <label>PlainText</label>
-              <textarea disabled />
-              <button disabled>Encrypt</button>
+              <textarea
+                name="plainText"
+                value={alicePlainText}
+                onChange={(e) => {
+                  setAlicePlainText(e.target.value);
+                }}
+                placeholder="Enter a text to encrypt it"
+                disabled={aliceHashed ? false : true}
+              />
             </form>
+            <div
+              className="Container"
+              style={
+                aliceHashed && alicePlainText
+                  ? { display: "block" }
+                  : { display: "none" }
+              }
+            >
+              <p>CipherText:</p>
+              <p className="break">
+                {
+                  encrypt(
+                    pkcs7(textToUtf8(alicePlainText).encodedTextHex, 16)
+                      .appendedPlaintextDec,
+                    aliceHashed.toString(),
+                    "ecb"
+                  ).cipherHex
+                }
+              </p>
+            </div>
           </div>
           <div className="container flex">
             <div className="profile-grid">
@@ -335,7 +395,7 @@ const Hybrid = () => {
             </fieldset>
             <fieldset>
               <legend>
-                Secret Key <small>({method.aes.toUpperCase()})</small>
+                Secret Key <small>({method.algo.toUpperCase()})</small>
               </legend>
               <p className="break pad5">
                 {bobHashed
@@ -343,9 +403,9 @@ const Hybrid = () => {
                   .toUpperCase()
                   .slice(
                     0,
-                    method.aes === "aes128"
+                    method.algo === "aes128"
                       ? 32
-                      : method.aes === "aes192"
+                      : method.algo === "aes192"
                       ? 48
                       : 64
                   )}
@@ -354,11 +414,109 @@ const Hybrid = () => {
             <br />
             <form className="flex">
               <label>Secret Key</label>
-              <input type="text" disabled />
+              <input
+                type="text"
+                name="key"
+                value={aliceHashed
+                  .toString()
+                  .toUpperCase()
+                  .slice(
+                    0,
+                    method.algo === "aes128"
+                      ? 32
+                      : method.algo === "aes192"
+                      ? 48
+                      : 64
+                  )}
+                placeholder={aliceHashed
+                  .toString()
+                  .toUpperCase()
+                  .slice(
+                    0,
+                    method.algo === "aes128"
+                      ? 32
+                      : method.algo === "aes192"
+                      ? 48
+                      : 64
+                  )}
+                readOnly
+              />
               <label>CipherText</label>
-              <textarea disabled />
-              <button disabled>Decrypt</button>
+              <textarea
+                name="cipherText"
+                value={bobCipherText}
+                onChange={(e) => {
+                  setBobCipherText(e.target.value);
+                }}
+                placeholder="Enter a hexadecimal to decrypt"
+                disabled={aliceHashed ? false : true}
+              />
             </form>
+            <div
+              className="Container"
+              style={bobCipherText ? { display: "block" } : { display: "none" }}
+            >
+              <p>
+                PlainText:<small>(Hex)</small>
+              </p>
+              <p className="break">
+                {bobCipherText.length % 32 === 0
+                  ? decrypt(
+                      vecToArr(bobCipherText),
+                      bobHashed.toString(),
+                      "ecb"
+                    ).plainHex
+                  : "Unvalid"}
+              </p>
+              <p>
+                PlainText:<small>(After delete padded bytes)</small>
+              </p>
+              <p className="break">
+                {bobCipherText.length % 32 === 0
+                  ? decrypt(
+                      vecToArr(bobCipherText),
+                      bobHashed.toString(),
+                      "ecb"
+                    ).plainHex.slice(
+                      0,
+                      bobCipherText.length / 2 -
+                        parseInt(
+                          decrypt(
+                            vecToArr(bobCipherText),
+                            bobHashed.toString(),
+                            "ecb"
+                          ).plainHex.slice(-1),
+                          16
+                        )
+                    )
+                  : "Unvalid"}
+              </p>
+              <p>PlainText:</p>
+              <p className="break">
+                {bobCipherText.length % 32 === 0
+                  ? utf8ToText(
+                      decrypt(
+                        vecToArr(bobCipherText),
+                        bobHashed.toString(),
+                        "ecb"
+                      )
+                        .plainHex.slice(
+                          0,
+                          bobCipherText.length / 2 -
+                            parseInt(
+                              decrypt(
+                                vecToArr(bobCipherText),
+                                bobHashed.toString(),
+                                "ecb"
+                              ).plainHex.slice(-1),
+                              16
+                            )
+                        )
+                        .join("")
+                    )
+                  : null}
+              </p>
+            </div>
           </div>
         </div>
       </div>
