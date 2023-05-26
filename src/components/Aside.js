@@ -31,10 +31,6 @@ const data = [
     title: "Base64 Encode",
     link: "/rudn-master/base64",
   },
-  {
-    title: "PKCS#7 Padding Scheme",
-    link: "/rudn-master/pkcs7",
-  },
 ];
 
 const Aside = () => {

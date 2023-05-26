@@ -174,6 +174,7 @@ const aesEncrypt = (plainText, key, aesVersion) => {
   ).paddedPlainTextHex;
   const paddedKeyHex = validation(plainText, key, aesVersion).paddedKeyHex;
   const paddedKeyBin = validation(plainText, key, aesVersion).paddedKeyBin;
+  const N = paddedKeyBin.length / 4; // Number of words (32-bit) in original key
   const numberOfBlocks = paddedPlainTextBin.length / 16;
   const cipherTextBinBlocks = [];
   for (let i = 0; i < numberOfBlocks; i++) {
@@ -206,6 +207,7 @@ const aesEncrypt = (plainText, key, aesVersion) => {
     validPlainText,
     validKey,
     numberOfBlocks,
+    N,
     paddedPlainTextHex,
     paddedKeyHex,
     cipherTextHexBlocks,

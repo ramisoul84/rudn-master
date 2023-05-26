@@ -328,7 +328,7 @@ const AES = () => {
                 <th>N</th>
                 <p>=</p>
                 <td>
-                  <span>{result.key.length / 4}</span>
+                  <span>{n}</span>
                 </td>
               </table>
             </div>
@@ -339,11 +339,9 @@ const AES = () => {
               is the (32-bit) words of the original key.
             </li>
             <div className="container flex">
-              {result.keyWordsHex
-                .slice(0, result.key.length / 4)
-                .map((e, i) => {
-                  return <Word name={`K${i}`} data={e} />;
-                })}
+              {result.keyWordsHex.slice(0, n).map((e, i) => {
+                return <Word name={`K${i}`} data={e} />;
+              })}
             </div>
             <li>
               <strong>RotWord</strong> is a one-byte left circular shift
